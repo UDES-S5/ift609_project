@@ -92,15 +92,13 @@
                            p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
                            result , res
                            state , state
-                           first-c , nil
-                           second-c, nil))
+                           second-l, nil))
       (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
                              `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie)
                                  p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
                                  result , res
                                  state , state
-                                 first-c , nil
-                                 second-c, nil))))))
+                                 second-l, nil))))))
    
    (run-full-time 10) 
    *model-action*)
@@ -227,11 +225,11 @@
 (install-device (open-exp-window "" :visible nil))
 
 ;La variable key indique quelle valise se trouve sur le 2ème niveau (ex. Key = 1, valise 1 est sur le deuxième niveau)
-(chunk-type arrange-state c1 c2 c3 p1 p2 p3 first-c second-c key result state)
+(chunk-type arrange-state c1 c2 c3 p1 p2 p3 second-l result state)
 (chunk-type first1 v1 v2 v3 result-first1)
 (chunk-type first2 v4 v5 result-first2)
 
-(chunk-type learned-info c1 c2 c3 p1 p2 p3 first-c second-c key)
+(chunk-type learned-info c1 c2 c3 p1 p2 p3 second-l)
 (declare-buffer-usage goal arrange-state :all)
 
 (define-chunks 
@@ -258,7 +256,7 @@
    (f ISA first1 v1 3 v2 1 v3 1 result-first1 113 )
    (g ISA first1 v1 1 v2 3 v3 1 result-first1 113 )
    (h ISA first1 v1 1 v2 1 v3 3 result-first1 113 )
-   (i ISA first2 v4 1 v5  1 result-first2 11)
+   (i ISA first2 v4 1 v5 1 result-first2 11)
    (j ISA first2 v4 2 v5 2 result-first2 22)
    (k ISA first2 v4 3 v5 3 result-first2 33)
    (l ISA first2 v4 1 v5 2  result-first2 12)
@@ -287,8 +285,7 @@
         p1  =j
         p2  =d
         p3  =e
-      - first-c nil
-      - second-c nil    
+      - second-l nil
    =goal>
         state remembering
 )
@@ -298,16 +295,13 @@
        state remembering
     =retrieval>
        isa learned-info
-       first-c =val1
-       second-c =val2
-	   key =key
+       second-l =second-l
     ==>
     =goal>
-       first-c =val1
-       second-c =val2
+       second-l =second-l
    +manual>
       cmd press-key
-      key =key
+      key =second-l
 )
 (p doesnt-remember-organization
     =goal>
@@ -336,14 +330,12 @@
 )
 (p success_3bags
    =retrieval>
-      result-first1  =value 
+     - buffer failure
    =goal> 
       state retrieving
    ==>
    =goal>
-      first-c   =value
-      second-c "vide"
-	  key "0"
+      second-l "0"
       state "final"
       result "win"        
 )
@@ -368,14 +360,11 @@
    =goal>
       isa arrange-state
       state retrieving_2layers
-      c3    =q
 	?manual>
       state free
    ==>
    =goal>
-      first-c   =p
-      second-c  =q
-	  key "3"
+      second-l  "3"
       state comparing_weight
    +manual>
       cmd press-key
@@ -399,14 +388,11 @@
       result-first2 =val
    =goal>
       state retrieving_2Layers_2  
-      c1 =v 
    ?manual>
       state free
    ==>
    =goal>
-      first-c =val  
-      second-c =v
-	  key "1"
+      second-l "1"
       state comparing2
    +manual>
       cmd press-key
@@ -432,12 +418,9 @@
       result-first2 =val
    =goal>
       state retrieving_2layers_3
-      c2 =v 
    ==>
    =goal>
-      first-c =val  
-      second-c =v
-	  key "2"
+      second-l "2"
       state "final"
       result "win"
    +manual>
@@ -454,9 +437,7 @@
         p1 =l
         p2 =d
         p3 =e
-        first-c =f
-        second-c =g
-		key =h
+        second-l =g
     ?imaginal>
         state free    
     ==>
@@ -469,24 +450,18 @@
         p1 =l
         p2 =d
         p3 =e
-        first-c =f
-        second-c  =g
-		key =h
+        second-l  =g
 )
 (p show-organization
    =goal>
       state finish
       result "win"
-      first-c =org1
-      second-c =org2
    ?manual>
       state free
     ==>
    +manual>
       cmd press-key
       key "0"
-   !output! =org1
-   !output! =org2
 )
 (p clear-new-imaginal-chunk
     ?imaginal>
