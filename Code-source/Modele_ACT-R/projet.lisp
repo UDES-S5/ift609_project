@@ -226,6 +226,7 @@
 
 (install-device (open-exp-window "" :visible nil))
 
+;La variable key indique quelle valise se trouve sur le 2ème niveau (ex. Key = 1, valise 1 est sur le deuxième niveau)
 (chunk-type arrange-state c1 c2 c3 p1 p2 p3 first-c second-c key result state)
 (chunk-type first1 v1 v2 v3 result-first1)
 (chunk-type first2 v4 v5 result-first2)
