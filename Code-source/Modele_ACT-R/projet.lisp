@@ -1,6 +1,3 @@
-
-
-
 (clear-all)
 
 ;;; Fonction pour placer les valises dans le coffre
@@ -20,7 +17,7 @@
          (setf (slot-value (caddr *valises*) 'couche) 1)
          (let ((choix-model (show-model-valises *valises* res state))); Montre les valises au modèle et enregistre la key pressée par le model
             
-            (when (string-equal "1" choix-model) (progn
+            (when (string-equal "3" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
                (setf (slot-value (caddr *valises*) 'couche) 2)
                (setf state "weight-problem"))) ; Met la troisième valise en couche 2
@@ -29,6 +26,9 @@
                (setf compteur (+ compteur 1))
                (setf (slot-value (cadr *valises*) 'couche) 2)
                (setf state "weight-problem-2"))) ; Met la deuxième valise en couche 2
+            (when (string-equal "1" choix-model) (progn
+               (setf compteur (+ compteur 1))
+               (setf (slot-value (car *valises*) 'couche) 2))) ; Met la première valise en couche 2
             (setf res "win") ;; De base on win
             (setf poids-tot-couche-1 0)
             (setf poids-tot-couche-2 0)
@@ -226,11 +226,11 @@
 
 (install-device (open-exp-window "" :visible nil))
 
-(chunk-type arrange-state c1 c2 c3 p1 p2 p3 first-c second-c result state)
+(chunk-type arrange-state c1 c2 c3 p1 p2 p3 first-c second-c key result state)
 (chunk-type first1 v1 v2 v3 result-first1)
 (chunk-type first2 v4 v5 result-first2)
 
-(chunk-type learned-info c1 c2 c3 p1 p2 p3 first-c second-c result)
+(chunk-type learned-info c1 c2 c3 p1 p2 p3 first-c second-c key)
 (declare-buffer-usage goal arrange-state :all)
 
 (define-chunks 
@@ -299,12 +299,14 @@
        isa learned-info
        first-c =val1
        second-c =val2
+	   key =key
     ==>
     =goal>
-       state finish
        first-c =val1
        second-c =val2
-       result "win"
+   +manual>
+      cmd press-key
+      key =key
 )
 (p doesnt-remember-organization
     =goal>
@@ -340,6 +342,7 @@
    =goal>
       first-c   =value
       second-c "vide"
+	  key "0"
       state "final"
       result "win"        
 )
@@ -371,10 +374,11 @@
    =goal>
       first-c   =p
       second-c  =q
+	  key "3"
       state comparing_weight
    +manual>
       cmd press-key
-      key "1"
+      key "3"
 )
 (p fail-3bag-2
    =goal>
@@ -401,10 +405,11 @@
    =goal>
       first-c =val  
       second-c =v
+	  key "1"
       state comparing2
    +manual>
       cmd press-key
-      key "2"
+      key "1"
 )
 (p fail-3bag-3
    ?retrieval>
@@ -431,8 +436,12 @@
    =goal>
       first-c =val  
       second-c =v
+	  key "2"
       state "final"
       result "win"
+   +manual>
+      cmd press-key
+      key "2"
 )
 (p memorize
     =goal>
@@ -445,7 +454,8 @@
         p2 =d
         p3 =e
         first-c =f
-        second-c =g 
+        second-c =g
+		key =h
     ?imaginal>
         state free    
     ==>
@@ -460,6 +470,7 @@
         p3 =e
         first-c =f
         second-c  =g
+		key =h
 )
 (p show-organization
    =goal>
