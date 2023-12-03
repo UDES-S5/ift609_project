@@ -11,7 +11,9 @@
       (setf res nil)
       (setf state nil)
       (setf *num-valises* (1+ (+ 2 (act-r-random 4))))
-      (setf *valises* (create-valises *num-valises*)) ;; Creation des valises
+      (setf *new-valises* (create-valises *num-valises*)) 
+      (setf *valises* (last *new-valises* *num-valises*)) ;; Creation des valises
+      (format t "taille de la liste: ~a~%" (length *valises*)) ;; Affiche la taille de la liste
       (while not-win ; appeler le modèle tant qu'il n'a pas win
          (setf (slot-value (car *valises*) 'couche) 1)
          (setf (slot-value (cadr *valises*) 'couche) 1)
