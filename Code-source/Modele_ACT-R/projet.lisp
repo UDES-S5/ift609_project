@@ -10,7 +10,8 @@
       (setf not-win t)
       (setf res nil)
       (setf state nil)
-      (setf *valises* (create-valises)); Creation des valises
+      (setf *num-valises* (1+ (+ 2 (act-r-random 4))))
+      (setf *valises* (create-valises *num-valises*)) ;; Creation des valises
       (while not-win ; appeler le modèle tant qu'il n'a pas win
          (setf (slot-value (car *valises*) 'couche) 1)
          (setf (slot-value (cadr *valises*) 'couche) 1)
@@ -46,9 +47,9 @@
                         (setf state "final")
                         (show-model-result res state))))))
             (when draw-valises
-            (print-valise (car *valises*))
-            (print-valise (cadr *valises*))
-            (print-valise (caddr *valises*))
+
+               (loop for valise in *valises* do (print-valise valise))
+
                (if (and (= (slot-value (car *valises*) 'couche) 1) (= (slot-value (cadr *valises*) 'couche) 1) (= (slot-value (caddr *valises*) 'couche) 1))
                   (progn
                      (setf nb 0)
@@ -149,7 +150,7 @@
     (allow-event-manager w)))
 
 
-(defvar *model-action* nil) ; La variable que le model devra remplir (liste de valise)
+(defvar *model-action* nil) ;; La variable que le model devra remplir (liste de valise)
 
 (defmethod rpm-window-key-event-handler ((win rpm-window) key)
   (if (eq win (current-device))
@@ -195,25 +196,38 @@
    (format t "|______||______|~%")
 )
 
-(defun create-valises()
-   ;; Création de l'instance des valises
-   (defparameter *valise-1* (make-instance 'valise))
-   (defparameter *valise-2* (make-instance 'valise))
-   (defparameter *valise-3* (make-instance 'valise))
-
-   (defvar valise-list(list *valise-1* *valise-2* *valise-3*)) ; ajout des valises dans une liste
-
-   (loop for valise in valise-list ; boucle sur les valises
-      do (progn
-            (setf (slot-value valise 'poids) (1+ (act-r-random 5))) ; poids aléatoire
-            (setf (slot-value valise 'categorie) (1+ (act-r-random 3))) ; categorie aléatoire
-            (setf (slot-value valise 'couche) 1) ; couche
-            ;; Dimension selon la catégorie
-            (case (slot-value valise 'categorie)
-               (1 (progn (setf (slot-value valise 'x) 3) (setf (slot-value valise 'y) 3)))
-               (2 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 2)))
-               (3 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 3))))))
-   valise-list); return valise-list
+(defun create-valises (num-valises)
+ 
+   (format t "Le nombre de valises crees: ~a~%" *num-valises*)
+ 
+   ;; Creer une liste vide
+   (defvar valise-list nil)
+ 
+   ;; Boucler sur le nombre de valises
+   (dotimes (i num-valises)
+      (format t "loop: ~a~%" i)
+      ;; Create a new instance of 'valise' with a name like `valise-1`, `valise-2`, etc.
+      (defparameter *valise* (make-instance 'valise))
+ 
+      ;; Ajouter la valise à la liste
+      (setf valise-list (append valise-list (list *valise*)))
+ 
+      ;; Set les propriétés de la valise
+      (progn
+         (setf (slot-value *valise* 'poids) (1+ (act-r-random 5))) ;; poids aléatoire
+         (setf (slot-value *valise* 'categorie) (1+ (act-r-random 3))) ;; categorie aléatoire
+         (setf (slot-value *valise* 'couche) 1) ;; couche
+         ;; Dimension selon la catégorie
+         (case (slot-value *valise* 'categorie)
+            (1 (progn (setf (slot-value *valise* 'x) 3) (setf (slot-value *valise* 'y) 3)))
+            (2 (progn (setf (slot-value *valise* 'x) 6) (setf (slot-value *valise* 'y) 2)))
+            (3 (progn (setf (slot-value *valise* 'x) 6) (setf (slot-value *valise* 'y) 3)))
+         )
+      )
+   )
+ 
+   ;; Return the list of valises
+   valise-list)
    
 
 
