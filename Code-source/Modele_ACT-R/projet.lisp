@@ -15,9 +15,12 @@
          (setf (slot-value (car *valises*) 'couche) 1)
          (setf (slot-value (cadr *valises*) 'couche) 1)
          (setf (slot-value (caddr *valises*) 'couche) 1)
+         (setf (slot-value (cadddr *valises*) 'couche) 1)
          (let ((choix-model (show-model-valises *valises* res state))); Montre les valises au modèle et enregistre la key pressée par le model
-            
-            (when (string-equal "3" choix-model) (progn
+            (when (string-equal "4" choix-model) (progn
+               (setf compteur (+ compteur 1)) ;; incrémente compteur
+               (setf (slot-value (cadddr *valises*) 'couche) 2))) ; Met la quatrième valise en couche 2
+			(when (string-equal "3" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
                (setf (slot-value (caddr *valises*) 'couche) 2)
                (setf state "weight-problem"))) ; Met la troisième valise en couche 2
@@ -198,8 +201,9 @@
    (defparameter *valise-1* (make-instance 'valise))
    (defparameter *valise-2* (make-instance 'valise))
    (defparameter *valise-3* (make-instance 'valise))
+   (defparameter *valise-4* (make-instance 'valise))
 
-   (defvar valise-list(list *valise-1* *valise-2* *valise-3*)) ; ajout des valises dans une liste
+   (defvar valise-list(list *valise-1* *valise-2* *valise-3* *valise-4*)) ; ajout des valises dans une liste
 
    (loop for valise in valise-list ; boucle sur les valises
       do (progn
@@ -210,7 +214,9 @@
             (case (slot-value valise 'categorie)
                (1 (progn (setf (slot-value valise 'x) 3) (setf (slot-value valise 'y) 3)))
                (2 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 2)))
-               (3 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 3))))))
+               (3 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 3)))
+               (4 (progn (setf (slot-value valise 'x) 3) (setf (slot-value valise 'y) 3)))
+			   )(format t "loop")))
    valise-list); return valise-list
    
 
@@ -224,12 +230,13 @@
 
 (install-device (open-exp-window "" :visible nil))
 
-;La variable key indique quelle valise se trouve sur le 2ème niveau (ex. Key = 1, valise 1 est sur le deuxième niveau)
-(chunk-type arrange-state c1 c2 c3 p1 p2 p3 second-l result state)
-(chunk-type first1 v1 v2 v3 result-first1)
-(chunk-type first2 v4 v5 result-first2)
+;La variable second-l indique quelle valise se trouve sur le 2ème niveau (ex. second-l = 1, valise 1 est sur le deuxième niveau)
+(chunk-type arrange-state c1 c2 c3 c4 p1 p2 p3 p4 second-l result state reste)
+(chunk-type set4 v1 v2 v3 v4 result-set4)
+(chunk-type set3 v1 v2 v3 result-set3)
+(chunk-type set2 v1 v2  result-set2)
 
-(chunk-type learned-info c1 c2 c3 p1 p2 p3 second-l)
+(chunk-type learned-info c1 c2 c3 c4 p1 p2 p3 p4 second-l)
 (declare-buffer-usage goal arrange-state :all)
 
 (define-chunks 
@@ -248,43 +255,48 @@
 
 
 (add-dm
-   (a ISA first1 v1 1 v2 1 v3 1 result-first1 111 )
-   (b ISA first1 v1 2 v2 2 v3 2 result-first1 222 )
-   (c ISA first1 v1 1 v2 1 v3 2 result-first1 112 )
-   (d ISA first1 v1 1 v2 2 v3 1 result-first1 112 )
-   (e ISA first1 v1 2 v2 1 v3 1 result-first1 112 )
-   (f ISA first1 v1 3 v2 1 v3 1 result-first1 113 )
-   (g ISA first1 v1 1 v2 3 v3 1 result-first1 113 )
-   (h ISA first1 v1 1 v2 1 v3 3 result-first1 113 )
-   (i ISA first2 v4 1 v5 1 result-first2 11)
-   (j ISA first2 v4 2 v5 2 result-first2 22)
-   (k ISA first2 v4 3 v5 3 result-first2 33)
-   (l ISA first2 v4 1 v5 2  result-first2 12)
-   (m ISA first2 v4 2 v5 1  result-first2 12)
-   (n ISA first2 v4 1  v5 3 result-first2 13)
-   (o ISA first2 v4 3  v5 1 result-first2 13)
-   (p ISA first2 v4 2 v5 3  result-first2 23)
-   (q ISA first2 v4 3 v5 2 result-first2 23)
+   (a ISA set4 v1 1 v2 1 v3 1 v4 1 result-set4 1111 )
+   (b ISA set3 v1 1 v2 1 v3 1 result-set3 111 )
+   (c ISA set3 v1 2 v2 2 v3 2 result-set3 222 )
+   (d ISA set3 v1 1 v2 1 v3 2 result-set3 112 )
+   (e ISA set3 v1 1 v2 2 v3 1 result-set3 112 )
+   (f ISA set3 v1 2 v2 1 v3 1 result-set3 112 )
+   (g ISA set3 v1 3 v2 1 v3 1 result-set3 113 )
+   (h ISA set3 v1 1 v2 3 v3 1 result-set3 113 )
+   (i ISA set3 v1 1 v2 1 v3 3 result-set3 113 )
+   (j ISA set2 v1 1 v2 1 result-set2 11)
+   (k ISA set2 v1 2 v2 2 result-set2 22)
+   (l ISA set2 v1 3 v2 3 result-set2 33)
+   (m ISA set2 v1 1 v2 2  result-set2 12)
+   (n ISA set2 v1 2 v2 1  result-set2 12)
+   (o ISA set2 v1 1 v2 3 result-set2 13)
+   (p ISA set2 v1 3 v2 1 result-set2 13)
+   (q ISA set2 v1 2 v2 3  result-set2 23)
+   (r ISA set2 v1 3 v2 2 result-set2 23)
 )
 (p start
    =goal>
         isa arrange-state
         state nil
-        c1 =a
+        c1  =a
         c2  =b
         c3  =c
+		c4  =d
         p1  =j
-        p2  =d
-        p3  =e
+        p2  =k
+        p3  =l
+		p4  =m
    ==>
    +retrieval> 
         isa learned-info
-        c1 =a
+        c1  =a
         c2  =b
         c3  =c
+		c4  =d
         p1  =j
-        p2  =d
-        p3  =e
+        p2  =k
+        p3  =l
+		p4  =m
       - second-l nil
    =goal>
         state remembering
@@ -318,21 +330,24 @@
       c1 =a
       c2 =b
       c3 =c
+	  c4 =d
       state begin-model
    ==>
    +retrieval> 
-      isa first1
+      isa set4
       v1 =a
       v2 =b
       v3 =c
+	  v4 =d
    =goal>
       state retrieving
 )
 (p success_3bags
    =retrieval>
-     - buffer failure
+    - buffer failure
    =goal> 
       state retrieving
+	  reste 0
    ==>
    =goal>
       second-l "0"
