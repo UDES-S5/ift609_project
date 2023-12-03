@@ -268,7 +268,7 @@
 
    ;; Trier la liste selon le poids (decroissant) des valises (limite 3 du modele)
    (setf sorted-v (sort v #'(lambda (v1 v2) (> (slot-value v1 'poids) (slot-value v2 'poids)))))
-   sorted-v); return valise-list
+   sorted-v); returner la liste triée
 
 
 
