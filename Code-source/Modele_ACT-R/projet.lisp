@@ -10,12 +10,12 @@
       (setf not-win t)
       (setf res nil)
       (setf state nil)
-      (setf *valises* (create-valises)); Creation des valises
+      (setf *additional-valises-count* (act-r-random 4)) ;; generer un nombre aleatoire entre 0 et 3 pour le nombre de valises additionnelles
+      (format t "Nombre de valises additionnelles: ~a~%" *additional-valises-count*)
+      (setf *valises* (create-valises *additional-valises-count*))
       (while not-win ; appeler le modèle tant qu'il n'a pas win
-         (setf (slot-value (car *valises*) 'couche) 1)
-         (setf (slot-value (cadr *valises*) 'couche) 1)
-         (setf (slot-value (caddr *valises*) 'couche) 1)
-         (setf (slot-value (cadddr *valises*) 'couche) 1)
+         (loop for valise in *valises*
+            do (setf (slot-value valise 'couche) 1))
          (let ((choix-model (show-model-valises *valises* res state))); Montre les valises au modèle et enregistre la key pressée par le model
             (when (string-equal "4" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
@@ -49,10 +49,8 @@
                         (setf state "final")
                         (show-model-result res state))))))
             (when draw-valises
-            (print-valise (car *valises*))
-            (print-valise (cadr *valises*))
-            (print-valise (caddr *valises*))
-            (print-valise (cadddr *valises*))
+            (loop for valise in *valises* do (print-valise valise))
+
             (format t "Niveau 1:~%")
 			(setf nb 0)
             (loop for valise in *valises*
@@ -83,15 +81,15 @@
 
 (defun show-model-valises(valises &optional res state)
    (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
-      (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4, (slot-value (cadddr valises) 'categorie) 
-                           p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids)
+      (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) 
+                           p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
                            result , res
                            state , state
                            second-l, nil
 						   reste 4))
       (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
-                             `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 ,(slot-value (cadddr valises) 'categorie)
-                                 p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids)
+                             `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) 
+                                 p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
                                  result , res
                                  state , state
                                  second-l, nil
@@ -144,7 +142,7 @@
     (allow-event-manager w)))
 
 
-(defvar *model-action* nil) ; La variable que le model devra remplir (liste de valise)
+(defvar *model-action* nil) ;; La variable que le model devra remplir (liste de valise)
 
 (defmethod rpm-window-key-event-handler ((win rpm-window) key)
   (if (eq win (current-device))
@@ -196,29 +194,79 @@
    (format t "|______|~%")
 )
 
-(defun create-valises()
+;;; Fonction pour obtenir la taille restante du coffre apres avoir placé des valises (valise-list)
+(defun calculate-remaining-space (valise-list)
+  ;; todo: rendre plus générique en fonction de la taille du coffre (tenir compte de la hauteur q4)
+  (let ((total-space 72) ;; 6*6*2
+        (used-space 0))
+      ;; Boucler sur les valises deja ajoutees et calculer l'espace utilise
+      (loop for valise in valise-list
+            do (setq used-space (+ used-space (* (slot-value valise 'x) (slot-value valise 'y))))
+      )
+      ;; Retourner l'espace restant
+      (- total-space used-space)))
+
+;;; Fonction pour créer des valises additionnelles (selon le nombre genere aleatoirement entre 0 et 3)
+(defun create-additional-valises (valise-list number-additional-valises)
+  (let ((new-valises nil))
+      ;; Boucler sur le nombre de valises additionnelles et en ajouter le maximum possible
+      (loop repeat number-additional-valises
+            do (let ((new-valise (make-instance 'valise)))
+                  ;; Assigner un poids et une catégorie aléatoirement
+                  (setf (slot-value new-valise 'poids) (1+ (act-r-random 5)))
+                  (setf (slot-value new-valise 'categorie) (1+ (act-r-random 3)))
+                  (setf (slot-value new-valise 'couche) 1)
+                  ;; Dimension selon la catégorie
+                  (case (slot-value new-valise 'categorie)
+                  (1 (progn (setf (slot-value new-valise 'x) 3) (setf (slot-value new-valise 'y) 3)))
+                  (2 (progn (setf (slot-value new-valise 'x) 6) (setf (slot-value new-valise 'y) 2)))
+                  (3 (progn (setf (slot-value new-valise 'x) 6) (setf (slot-value new-valise 'y) 3)))
+                  )
+                  ;; Valider si la valise peut être ajoutée sinon on l'ignore
+                  (when (>= (calculate-remaining-space (append valise-list new-valises))
+                           (* (slot-value new-valise 'x) (slot-value new-valise 'y)))
+                  (push new-valise new-valises))
+               )
+         )
+    (append valise-list new-valises)
+   )
+)
+
+;; Fonction pour creer les valises, on cree 3 valises de base et on ajoute des valises additionnelles (selon le nombre genere aleatoirement entre 0 et 3)
+(defun create-valises(count-to-add)
    ;; Création de l'instance des valises
    (defparameter *valise-1* (make-instance 'valise))
    (defparameter *valise-2* (make-instance 'valise))
    (defparameter *valise-3* (make-instance 'valise))
-   (defparameter *valise-4* (make-instance 'valise))
 
-   (defvar valise-list(list *valise-1* *valise-2* *valise-3* *valise-4*)) ; ajout des valises dans une liste
+   (defvar valise-list(list *valise-1* *valise-2* *valise-3*)) ; ajout des valises dans une liste
 
    (loop for valise in valise-list ; boucle sur les valises
       do (progn
-            (setf (slot-value valise 'poids) (1+ (act-r-random 5))) ; poids aléatoire
-            (setf (slot-value valise 'categorie) (1+ (act-r-random 3))) ; categorie aléatoire
-            (setf (slot-value valise 'couche) 1) ; couche
+            (setf (slot-value valise 'poids) (1+ (act-r-random 5))) ;; poids aléatoire
+            (setf (slot-value valise 'categorie) (1+ (act-r-random 3))) ;; categorie aléatoire
+            (setf (slot-value valise 'couche) 1) ;; couche
             ;; Dimension selon la catégorie
             (case (slot-value valise 'categorie)
                (1 (progn (setf (slot-value valise 'x) 3) (setf (slot-value valise 'y) 3)))
                (2 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 2)))
                (3 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 3)))
-               (4 (progn (setf (slot-value valise 'x) 3) (setf (slot-value valise 'y) 3)))
-			   )(format t "loop")))
-   valise-list); return valise-list
+            )
+         )
+   )
+
+   (format t "Taille de la liste initiale: ~a~%" (length valise-list))
+   (format t "Espace restant avant ajout: ~a~%" (calculate-remaining-space valise-list))
+
+   ;; Ajout les valises additionnelles
+   (setf v (create-additional-valises valise-list count-to-add))
+
    
+   (format t "Taille de la liste apres ajout: ~a~%" (length v))
+   (format t "Espace restant apres ajout: ~a~%" (calculate-remaining-space v))
+   v); return valise-list
+
+
 
 
 ;;; Modèle ACT-R : 
@@ -231,12 +279,12 @@
 (install-device (open-exp-window "" :visible nil))
 
 ;La variable second-l indique quelle valise se trouve sur le 2ème niveau (ex. second-l = 1, valise 1 est sur le deuxième niveau)
-(chunk-type arrange-state c1 c2 c3 c4 p1 p2 p3 p4 second-l result state reste)
+(chunk-type arrange-state c1 c2 c3 p1 p2 p3 second-l result state reste)
 (chunk-type set4 v1 v2 v3 v4 result-set4)
 (chunk-type set3 v1 v2 v3 result-set3)
 (chunk-type set2 v1 v2  result-set2)
 
-(chunk-type learned-info c1 c2 c3 c4 p1 p2 p3 p4 second-l)
+(chunk-type learned-info c1 c2 c3 p1 p2 p3 second-l)
 (declare-buffer-usage goal arrange-state :all)
 
 (define-chunks 
@@ -281,22 +329,18 @@
         c1  =a
         c2  =b
         c3  =c
-		c4  =d
         p1  =j
         p2  =k
         p3  =l
-		p4  =m
    ==>
    +retrieval> 
         isa learned-info
         c1  =a
         c2  =b
         c3  =c
-		c4  =d
         p1  =j
         p2  =k
         p3  =l
-		p4  =m
       - second-l nil
    =goal>
         state remembering
@@ -330,7 +374,6 @@
       c1 =a
       c2 =b
       c3 =c
-	  c4 =d
       state begin-model
    ==>
    +retrieval> 
@@ -338,7 +381,6 @@
       v1 =a
       v2 =b
       v3 =c
-	  v4 =d
    =goal>
       state retrieving
 )
