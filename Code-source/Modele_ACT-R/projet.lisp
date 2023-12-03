@@ -79,6 +79,7 @@
    (setf moyenne (+ moyenne compteur)))
    (/ (/ moyenne n-times) 3.0))
 
+;; Todo: add the additional valises count to handle dynamically the number of valises on the mdodel side
 (defun show-model-valises(valises &optional res state)
    (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
       (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) 
@@ -264,7 +265,10 @@
    
    (format t "Taille de la liste apres ajout: ~a~%" (length v))
    (format t "Espace restant apres ajout: ~a~%" (calculate-remaining-space v))
-   v); return valise-list
+
+   ;; Trier la liste selon le poids (decroissant) des valises (limite 3 du modele)
+   (setf sorted-v (sort v #'(lambda (v1 v2) (> (slot-value v1 'poids) (slot-value v2 'poids)))))
+   sorted-v); return valise-list
 
 
 
@@ -278,7 +282,7 @@
 
 (install-device (open-exp-window "" :visible nil))
 
-;La variable second-l indique quelle valise se trouve sur le 2ème niveau (ex. second-l = 1, valise 1 est sur le deuxième niveau)
+;; La variable second-l indique quelle valise se trouve sur le 2ème niveau (ex. second-l = 1, valise 1 est sur le deuxième niveau)
 (chunk-type arrange-state c1 c2 c3 p1 p2 p3 second-l result state reste)
 (chunk-type set4 v1 v2 v3 v4 result-set4)
 (chunk-type set3 v1 v2 v3 result-set3)
