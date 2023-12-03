@@ -52,56 +52,50 @@
             (print-valise (car *valises*))
             (print-valise (cadr *valises*))
             (print-valise (caddr *valises*))
-               (if (and (= (slot-value (car *valises*) 'couche) 1) (= (slot-value (cadr *valises*) 'couche) 1) (= (slot-value (caddr *valises*) 'couche) 1))
-                  (progn
-                     (setf nb 0)
-                     (setf grandevalise (car *valises*))
-                     (loop for valise in *valises*
-                        do (if (= (slot-value valise 'categorie) 1)
-                           (setf nb (+ nb 1))
-                           (setf grandevalise valise)))
-                     (if (>= nb 2)
-                        (progn 
-                           (draw2little)
-                           (draw-valise grandevalise)
-                        )
-                        (progn
-                           (format t "Niveau 1:~%")
-                           (loop for valise in *valises*
-                              do (when (= (slot-value valise 'couche) 1)
-                                 (progn (draw-valise valise) (format t "~%"))))
-                           (format t "~%Niveau 2:~%")
-                           (loop for valise in *valises*
-                              do (when (= (slot-value valise 'couche) 2)
-                                 (draw-valise valise)))
-                        ))
-                  )
-                  (progn 
-                     (format t "Niveau 1:~%")
-                     (loop for valise in *valises*
-                        do (when (= (slot-value valise 'couche) 1)
-                           (progn (draw-valise valise) (format t "~%"))))
-                     (format t "~%Niveau 2:~%")
-                     (loop for valise in *valises*
-                        do (when (= (slot-value valise 'couche) 2)
-                           (draw-valise valise)))))))
+            (print-valise (cadddr *valises*))
+            (format t "Niveau 1:~%")
+			(setf nb 0)
+            (loop for valise in *valises*
+                do (when (= (slot-value valise 'couche) 1)
+					(if (not (= (slot-value valise 'categorie) 1))
+						(progn (draw-valise valise) (format t "~%"))
+						(setf nb (+ nb 1)))))
+			(cond
+				((>= nb 4) (draw2little)(draw2little))
+				((= nb 3) (draw2little)(draw1little))				
+				((= nb 2) (draw2little))
+				((= nb 1) (draw1little)))
+			(setf nb 0)
+            (format t "~%Niveau 2:~%")
+            (loop for valise in *valises*
+                do (when (= (slot-value valise 'couche) 2)
+					(if (not (= (slot-value valise 'categorie) 1))
+						(progn (draw-valise valise) (format t "~%"))
+						(setf nb (+ nb 1)))))
+			(cond
+				((>= nb 4) (draw2little)(draw2little))
+				((= nb 3) (draw2little)(draw1little))				
+				((= nb 2) (draw2little))
+				((= nb 1) (draw1little)))))
 
    (setf moyenne (+ moyenne compteur)))
    (/ (/ moyenne n-times) 3.0))
 
 (defun show-model-valises(valises &optional res state)
    (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
-      (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie)
-                           p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
+      (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4, (slot-value (cadddr valises) 'categorie) 
+                           p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids)
                            result , res
                            state , state
-                           second-l, nil))
+                           second-l, nil
+						   reste 4))
       (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
-                             `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie)
-                                 p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
+                             `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 ,(slot-value (cadddr valises) 'categorie)
+                                 p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids)
                                  result , res
                                  state , state
-                                 second-l, nil))))))
+                                 second-l, nil
+								 reste 4))))))
    
    (run-full-time 10) 
    *model-action*)
@@ -189,11 +183,17 @@
    )
 )
 (defun draw2little()
-   (format t "Niveau 1: ~%")
    (format t " ______  ______~%")
    (format t "|______||______|~%")
    (format t "|______||______|~%")
    (format t "|______||______|~%")
+)
+
+(defun draw1little()
+   (format t " ______ ~%")
+   (format t "|______|~%")
+   (format t "|______|~%")
+   (format t "|______|~%")
 )
 
 (defun create-valises()
