@@ -49,6 +49,7 @@
                         (show-model-result res state))))))
             (when draw-valises
 
+               ;; Boucler sur les valises et les afficher
                (loop for valise in *valises* do (print-valise valise))
 
                (if (and (= (slot-value (car *valises*) 'couche) 1) (= (slot-value (cadr *valises*) 'couche) 1) (= (slot-value (caddr *valises*) 'couche) 1))
