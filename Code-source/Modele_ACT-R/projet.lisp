@@ -10,9 +10,9 @@
       (setf not-win t)
       (setf res nil)
       (setf state nil)
-      (setf *num-valises* (1+ (+ 2 (act-r-random 4))))
-      (setf *new-valises* (create-valises *num-valises*)) 
-      (setf *valises* (last *new-valises* *num-valises*)) ;; Creation des valises
+      (setf *additional-valises-count* (1+ (act-r-random 3)))
+      (format t "additional number: ~a~%" *additional-valises-count*)
+      (setf *valises* (create-valises *additional-valises-count*)) 
       (format t "taille de la liste: ~a~%" (length *valises*)) ;; Affiche la taille de la liste
       (while not-win ; appeler le modèle tant qu'il n'a pas win
          (setf (slot-value (car *valises*) 'couche) 1)
@@ -198,39 +198,60 @@
    (format t "|______||______|~%")
 )
 
-(defun create-valises (num-valises)
- 
-   (format t "Le nombre de valises crees: ~a~%" *num-valises*)
- 
-   ;; Creer une liste vide
-   (defvar valise-list nil)
- 
-   ;; Boucler sur le nombre de valises
-   (dotimes (i num-valises)
-      (format t "loop: ~a~%" i)
-      ;; Create a new instance of 'valise' with a name like `valise-1`, `valise-2`, etc.
-      (defparameter *valise* (make-instance 'valise))
- 
-      ;; Ajouter la valise à la liste
-      (setf valise-list (append valise-list (list *valise*)))
- 
-      ;; Set les propriétés de la valise
-      (progn
-         (setf (slot-value *valise* 'poids) (1+ (act-r-random 5))) ;; poids aléatoire
-         (setf (slot-value *valise* 'categorie) (1+ (act-r-random 3))) ;; categorie aléatoire
-         (setf (slot-value *valise* 'couche) 1) ;; couche
-         ;; Dimension selon la catégorie
-         (case (slot-value *valise* 'categorie)
-            (1 (progn (setf (slot-value *valise* 'x) 3) (setf (slot-value *valise* 'y) 3)))
-            (2 (progn (setf (slot-value *valise* 'x) 6) (setf (slot-value *valise* 'y) 2)))
-            (3 (progn (setf (slot-value *valise* 'x) 6) (setf (slot-value *valise* 'y) 3)))
-         )
+(defun calculate-remaining-space (valise-list)
+  ;; Assuming the box size is fixed at 6x6x2 layers
+  (let ((total-space 72) ; 6*6*2
+        (used-space 0))
+    (loop for valise in valise-list
+          do (setq used-space (+ used-space (* (slot-value valise 'x) (slot-value valise 'y)))))
+    (- total-space used-space)))
+
+(defun create-additional-valises (valise-list number-additional-valises)
+  (let ((new-valises nil))
+    (loop repeat number-additional-valises
+          do (let ((new-valise (make-instance 'valise)))
+               ;; Assign random weight and category
+               (setf (slot-value new-valise 'poids) (1+ (act-r-random 5)))
+               (setf (slot-value new-valise 'categorie) (1+ (act-r-random 3)))
+               (setf (slot-value new-valise 'couche) 1)
+               ;; Set dimensions based on category
+               (case (slot-value new-valise 'categorie)
+                 (1 (progn (setf (slot-value new-valise 'x) 3) (setf (slot-value new-valise 'y) 3)))
+                 (2 (progn (setf (slot-value new-valise 'x) 6) (setf (slot-value new-valise 'y) 2)))
+                 (3 (progn (setf (slot-value new-valise 'x) 6) (setf (slot-value new-valise 'y) 3))))
+               ;; Check if it fits in the remaining space
+               (when (>= (calculate-remaining-space (append valise-list new-valises))
+                         (* (slot-value new-valise 'x) (slot-value new-valise 'y)))
+                 (push new-valise new-valises))
+            )
       )
+    (append valise-list new-valises)
    )
- 
-   ;; Return the list of valises
-   valise-list)
-   
+)
+
+(defun create-valises (number-additional-valises)
+  (defparameter *valise-1* (make-instance 'valise))
+  (defparameter *valise-2* (make-instance 'valise))
+  (defparameter *valise-3* (make-instance 'valise))
+
+  (defvar valise-list (list *valise-1* *valise-2* *valise-3*))
+  ;; Setting properties for the first three valises
+  (loop for valise in valise-list
+        do (progn
+             (setf (slot-value valise 'poids) (1+ (act-r-random 5)))
+             (setf (slot-value valise 'categorie) (1+ (act-r-random 3)))
+             (setf (slot-value valise 'couche) 1)
+             (case (slot-value valise 'categorie)
+               (1 (progn (setf (slot-value valise 'x) 3) (setf (slot-value valise 'y) 3)))
+               (2 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 2)))
+               (3 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 3)))))
+  )
+  (format t "Remaining space: ~a~%" (calculate-remaining-space valise-list))
+  ;; Adding additional valises based on remaining space
+  (setq valise-list (create-additional-valises valise-list number-additional-valises))
+  valise-list) ; Return the complete list of valises
+
+
 
 
 ;;; Modèle ACT-R : 
