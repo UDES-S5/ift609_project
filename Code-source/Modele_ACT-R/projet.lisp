@@ -48,33 +48,38 @@
                       (unless (string-equal choix-model "0")(progn 
                         (setf state "final")
                         (show-model-result res state))))))
+
             (when draw-valises
+            ;; Affichage du message avec les caractéristiques des valises
             (loop for valise in *valises* do (print-valise valise))
 
+            ;; Affichage du schéma des valises
             (format t "Niveau 1:~%")
-			(setf nb 0)
+			   (setf nb 0) ; Nombre de petites valises
             (loop for valise in *valises*
                 do (when (= (slot-value valise 'couche) 1)
 					(if (not (= (slot-value valise 'categorie) 1))
 						(progn (draw-valise valise) (format t "~%"))
 						(setf nb (+ nb 1)))))
-			(cond
-				((>= nb 4) (draw2little)(draw2little))
-				((= nb 3) (draw2little)(draw1little))				
-				((= nb 2) (draw2little))
-				((= nb 1) (draw1little)))
-			(setf nb 0)
+            ; Affichage des petites valises
+			   (cond
+				   ((>= nb 4) (draw2little)(draw2little))
+				   ((= nb 3) (draw2little)(draw1little))				
+				   ((= nb 2) (draw2little))
+				   ((= nb 1) (draw1little)))
+			   (setf nb 0)
             (format t "~%Niveau 2:~%")
             (loop for valise in *valises*
                 do (when (= (slot-value valise 'couche) 2)
 					(if (not (= (slot-value valise 'categorie) 1))
 						(progn (draw-valise valise) (format t "~%"))
 						(setf nb (+ nb 1)))))
-			(cond
-				((>= nb 4) (draw2little)(draw2little))
-				((= nb 3) (draw2little)(draw1little))				
-				((= nb 2) (draw2little))
-				((= nb 1) (draw1little)))))
+			   ; Affichage des petites valises
+            (cond
+				   ((>= nb 4) (draw2little)(draw2little))
+				   ((= nb 3) (draw2little)(draw1little))				
+				   ((= nb 2) (draw2little))
+				   ((= nb 1) (draw1little)))))
 
    (setf moyenne (+ moyenne compteur)))
    (/ (/ moyenne n-times) 3.0))
@@ -377,7 +382,7 @@
       state begin-model
    ==>
    +retrieval> 
-      isa set4
+      isa set3
       v1 =a
       v2 =b
       v3 =c
