@@ -64,23 +64,26 @@
                (setf state "weight-problem-2"))) ; Met la deuxième valise sur la couche level
             (when (string-equal "1" choix-model) (progn
                (setf compteur (+ compteur 1))
-               (setf (slot-value (car *valises*) 'couche) level))) ; Met la première valise sur la couche level
-            (setf res "win") ;; De base on win
-            (setf poids-tot-couche-1 0)
-            (setf poids-tot-couche-2 0)
-            (loop for valise in *valises* ; boucle sur les valises choisi par le modèle
-               do (if (= (slot-value valise 'couche) 1)
-                     ;; Si la valise est couche 1
-                     (setf poids-tot-couche-1 (+ poids-tot-couche-1 (slot-value valise 'poids))) ; Adition du poids de la valise
-                     ;; Si la valise est couche 2
-                     (setf poids-tot-couche-2 (+ poids-tot-couche-2 (slot-value valise 'poids))))) ; Adition du poids de la valise
-            ;(setf choix-model "0")
-            (if (> poids-tot-couche-2 poids-tot-couche-1)
-               (setf res "lose") ; Si les valises en couche 2 sont plus lourdes -> lose
-               (progn (setf not-win nil)
-                      (unless (string-equal choix-model "0")(progn 
-                        (setf state "final")
-                        (show-model-result res state))))))
+               (setf (slot-value (car *valises*) 'couche) level)
+			   (setf state "second-luggage"))) ; Met la première valise sur la couche level
+            (when (string-equal "F" choix-model) (progn
+				(format t "Here")
+				(setf res "win") ;; De base on win
+				(setf poids-tot-couche-1 0)
+				(setf poids-tot-couche-2 0)
+				(loop for valise in *valises* ; boucle sur les valises choisi par le modèle
+				  do (if (= (slot-value valise 'couche) 1)
+						;; Si la valise est couche 1
+						(setf poids-tot-couche-1 (+ poids-tot-couche-1 (slot-value valise 'poids))) ; Adition du poids de la valise
+						;; Si la valise est couche 2
+						(setf poids-tot-couche-2 (+ poids-tot-couche-2 (slot-value valise 'poids))))) ; Adition du poids de la valise
+				;(setf choix-model "0")
+				(if (> poids-tot-couche-2 poids-tot-couche-1)
+					(setf res "lose") ; Si les valises en couche 2 sont plus lourdes -> lose
+					(progn (setf not-win nil)
+						(unless (string-equal choix-model "0")(progn 
+							(setf state "final")
+							(show-model-result res state))))))))
 
             (when draw-valises
             ;; Affichage du message avec les caractéristiques des valises
@@ -392,7 +395,7 @@
       state free
    ==>
    =goal>
-      state second-luggage
+      state second
 	  l1 1
    +manual>
       cmd press-key
@@ -400,7 +403,7 @@
 )
 (p second-luggage
    =goal>
-      state second-luggage
+      state "second-luggage"
    ?manual>
       state free
    ==>
@@ -608,6 +611,19 @@
    ==>
    =goal>
       state finish
+)
+(p verify
+   =goal>
+      state finish
+    - result "win"
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key "F"
 )
 (p show-organization
    =goal>
