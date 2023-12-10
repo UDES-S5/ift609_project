@@ -17,6 +17,28 @@
       (while not-win ; appeler le modèle tant qu'il n'a pas win
          ;(loop for valise in *valises*
           ;  do (setf (slot-value valise 'couche) 1))
+		 (setq couche1 '())
+		 (setq couche2 '())
+		 
+         (loop for valise in *valises* do (print-valise valise))
+
+         (loop for valise in *valises*
+			do (if(= (slot-value valise 'couche) 1) (push (slot-value valise 'categorie) couche1)
+			(push (slot-value valise 'categorie) couche2)))
+
+		 (setq couche1 (sort couche1 #'<))
+		 (setq couche2 (sort couche2 #'<))
+		 
+		 (setq concatenated (parse-integer (format nil "~{~a~}" couche1)))
+		 
+		 (format t "Concat: ~a~%" concatenated)
+		 (format t "Couche 1: ~a~%" couche1)
+		 (format t "Couche 2: ~a~%" couche2)
+
+		 (if (member concatenated sets)
+			(format t "The item is in the list.~%")
+			(format t "The item is not in the list.~%"))
+			
          (let ((choix-model (show-model-valises *valises* res state))); Montre les valises au modèle et enregistre la key pressée par le model
             (when (string-equal "L" choix-model) (progn
                (if (= level 1)
@@ -24,7 +46,7 @@
 					(setf level 1)))) ;Switches the level
 			(when (string-equal "6" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
-               (setf (slot-value (caddddr *valises*) 'couche) level))) ; Met la sixième valise sur la couche level
+               (setf (slot-value (cadddddr *valises*) 'couche) level))) ; Met la sixième valise sur la couche level
 			(when (string-equal "5" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
                (setf (slot-value (caddddr *valises*) 'couche) level))) ; Met la cinquième valise sur la couche level
@@ -101,15 +123,13 @@
                            p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
                            result , res
                            state , state
-                           second-l, nil
-						   reste 4))
+                           second-l, nil))
       (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
                              `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) 
                                  p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
                                  result , res
                                  state , state
-                                 second-l, nil
-								 reste 4))))))
+                                 second-l, nil))))))
    
    (run-full-time 10) 
    *model-action*)
@@ -406,7 +426,7 @@
 (p fourth-luggage
    =goal>
       state fourth-luggage
-	- c4 0
+	- c4 nil
    ?manual>
       state free
    ==>
@@ -419,7 +439,7 @@
 (p no-fourth-luggage
    =goal>
       state fourth-luggage
-	  c4 0 
+	  c4 nil 
    ==>
    =goal>
       state switch-level
@@ -427,7 +447,7 @@
 (p fifth-luggage
    =goal>
       state fifth-luggage
-	  - c5 0
+	  - c5 nil
    ?manual>
       state free	  
    ==>
@@ -440,7 +460,7 @@
 (p no-fifth-luggage
    =goal>
       state fifth-luggage
-	  c5 0
+	  c5 nil
    ==>
    =goal>
       state switch-level
@@ -448,7 +468,7 @@
 (p sixth-luggage
    =goal>
       state sixth-luggage
-	  - c6 0 
+	  - c6 nil 
    ?manual>
       state free
    ==>
@@ -461,7 +481,7 @@
 (p no-sixth-luggage
    =goal>
       state sixth-luggage
-	  c6 0 
+	  c6 nil 
    ==>
    =goal>
       state switch-level
@@ -502,7 +522,7 @@
 (p fourth-luggage-2
    =goal>
       state fourth-luggage-2
-	- c4 0
+	- c4 nil
 	- l4 1
    ?manual>
       state free
@@ -524,7 +544,7 @@
 (p no-fourth-luggage-2
    =goal>
       state fourth-luggage-2
-	  c4 0 
+	  c4 nil 
    ==>
    =goal>
       state finish
@@ -532,7 +552,7 @@
 (p fifth-luggage-2
    =goal>
       state fifth-luggage-2
-	- c5 0 
+	- c5 nil 
 	- l5 1
    ?manual>
       state free
@@ -554,7 +574,7 @@
 (p no-fifth-luggage-2
    =goal>
       state fifth-luggage-2
-	  c5 0 
+	  c5 nil 
    ==>
    =goal>
       state finish
@@ -562,13 +582,13 @@
 (p sixth-luggage-2
    =goal>
       state sixth-luggage-2
-	- c6 0 
+	- c6 nil 
 	- l6 1
    ?manual>
       state free
    ==>
    =goal>
-      state switch-level
+      state finish
    +manual>
       cmd press-key
       key "6"
@@ -584,7 +604,7 @@
 (p no-sixth-luggage-2
    =goal>
       state sixth-luggage
-	  c6 0 
+	  c6 nil 
    ==>
    =goal>
       state finish
