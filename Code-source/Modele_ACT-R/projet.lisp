@@ -295,12 +295,9 @@
 (install-device (open-exp-window "" :visible nil))
 
 ;La variable second-l indique quelle valise se trouve sur le 2ème niveau (ex. second-l = 1, valise 1 est sur le deuxième niveau)
-(chunk-type arrange-state c1 c2 c3 p1 p2 p3 second-l result state reste)
-(chunk-type set4 v1 v2 v3 v4 result-set4)
-(chunk-type set3 v1 v2 v3 result-set3)
-(chunk-type set2 v1 v2  result-set2)
+(chunk-type arrange-state c1 c2 c3 c4 c5 c6 p1 p2 p3 p4 p5 p6 l1 l2 l3 l4 l5 l6 result state )
 
-(chunk-type learned-info c1 c2 c3 p1 p2 p3 second-l)
+(chunk-type learned-info c1 c2 c3 c4 c5 c6 p1 p2 p3 p4 p5 p6 l1 l2 l3 l4 l5 l6)
 (declare-buffer-usage goal arrange-state :all)
 
 (define-chunks
@@ -310,15 +307,13 @@
 	(fourth-luggage isa chunk)
 	(fifth-luggage isa chunk)
 	(sixth-luggage isa chunk)
-	(switch-level isa chunk)	
+	(switch-level isa chunk)
+	(third-luggage-2 isa chunk)
+	(fourth-luggage-2 isa chunk)
+	(fifth-luggage-2 isa chunk)
+	(sixth-luggage-2 isa chunk)	
     (remembering isa chunk) 
-    (finish isa chunk) 
-    (retrieving isa chunk) 
-    (retrieving_2layers isa chunk) 
-    (retrieving_2layers_2 isa chunk)
-    (retrieving_2layers_3 isa chunk) 
-    (comparing_weight isa chunk) 
-    (comparing2 isa chunk)    
+    (finish isa chunk)
 )
 
 (p start
@@ -351,6 +346,8 @@
     =retrieval>
        isa learned-info
        second-l =second-l
+   ?manual>
+      state free
     ==>
     =goal>
        second-l =second-l
@@ -371,9 +368,12 @@
 (p first-luggage
    =goal>
       state begin-model
+   ?manual>
+      state free
    ==>
    =goal>
       state second-luggage
+	  l1 1
    +manual>
       cmd press-key
       key "1"
@@ -381,9 +381,12 @@
 (p second-luggage
    =goal>
       state second-luggage
+   ?manual>
+      state free
    ==>
    =goal>
       state third-luggage
+	  l2 1
    +manual>
       cmd press-key
       key "2"
@@ -391,6 +394,8 @@
 (p third-luggage
    =goal>
       state third-luggage
+   ?manual>
+      state free
    ==>
    =goal>
       state fourth-luggage
@@ -401,7 +406,9 @@
 (p fourth-luggage
    =goal>
       state fourth-luggage
-	- c4 0 
+	- c4 0
+   ?manual>
+      state free
    ==>
    =goal>
       state fifth-luggage
@@ -420,7 +427,9 @@
 (p fifth-luggage
    =goal>
       state fifth-luggage
-	  - c5 0 
+	  - c5 0
+   ?manual>
+      state free	  
    ==>
    =goal>
       state sixth-luggage
@@ -431,7 +440,7 @@
 (p no-fifth-luggage
    =goal>
       state fifth-luggage
-	  c5 0 
+	  c5 0
    ==>
    =goal>
       state switch-level
@@ -440,6 +449,8 @@
    =goal>
       state sixth-luggage
 	  - c6 0 
+   ?manual>
+      state free
    ==>
    =goal>
       state switch-level
@@ -458,18 +469,122 @@
 (p switch-level
    =goal>
       state switch-level
-	  > reste 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state third-luggage-2
+   +manual>
+      cmd press-key
+      key "L"
+)
+(p third-luggage-2
+   =goal>
+      state third-luggage-2
+	- l3 1
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state fourth-luggage-2
+   +manual>
+      cmd press-key
+      key "3"
+)
+(p skip-third-luggage-2
+   =goal>
+      state third-luggage-2
+	  l3 1
+   ==>
+   =goal>
+      state fourth-luggage-2
+)
+(p fourth-luggage-2
+   =goal>
+      state fourth-luggage-2
+	- c4 0
+	- l4 1
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state fifth-luggage-2
+   +manual>
+      cmd press-key
+      key "4"
+)
+(p skip-fourth-luggage-2
+   =goal>
+      state fourth-luggage-2
+	  l4 1
+   ==>
+   =goal>
+      state fifth-luggage-2
+)
+(p no-fourth-luggage-2
+   =goal>
+      state fourth-luggage-2
+	  c4 0 
+   ==>
+   =goal>
+      state finish
+)
+(p fifth-luggage-2
+   =goal>
+      state fifth-luggage-2
+	- c5 0 
+	- l5 1
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state sixth-luggage-2
+   +manual>
+      cmd press-key
+      key "5"
+)
+(p skip-fifth-luggage-2
+   =goal>
+      state fifth-luggage-2
+	  l5 1
+   ==>
+   =goal>
+      state fifth-luggage-2
+)
+(p no-fifth-luggage-2
+   =goal>
+      state fifth-luggage-2
+	  c5 0 
+   ==>
+   =goal>
+      state finish
+)
+(p sixth-luggage-2
+   =goal>
+      state sixth-luggage-2
+	- c6 0 
+	- l6 1
+   ?manual>
+      state free
    ==>
    =goal>
       state switch-level
    +manual>
       cmd press-key
-      key "L"
+      key "6"
 )
-(p switch-level-end
+(p skip-sixth-luggage-2
    =goal>
-      state switch-level
-	  reste 0
+      state sixth-luggage-2
+	  l6 1
+   ==>
+   =goal>
+      state finish
+)
+(p no-sixth-luggage-2
+   =goal>
+      state sixth-luggage
+	  c6 0 
    ==>
    =goal>
       state finish
