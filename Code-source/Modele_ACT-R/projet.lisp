@@ -641,7 +641,7 @@
 )
 (p no-sixth-luggage-2
    =goal>
-      state "sixth-luggage"
+      state "sixth-luggage-2"
 	  c6 nil 
    ==>
    =goal>
@@ -662,7 +662,7 @@
 )
 (p show-organization
    =goal>
-      state "finish"
+      state "final"
       result "win"
    ?manual>
       state free
