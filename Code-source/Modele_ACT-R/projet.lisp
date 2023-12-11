@@ -190,9 +190,6 @@
 ;;    (reverse *model-action-list*)
 ;; )
 
-(defun caddddr (x)
-  (car (cddr (cddr (cdr x)))))
-
 
 
 
