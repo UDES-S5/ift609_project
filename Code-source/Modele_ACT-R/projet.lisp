@@ -20,71 +20,134 @@
 		 (setq couche1 '())
 		 (setq couche2 '())
 		 
-         (loop for valise in *valises* do (print-valise valise))
-
-         (loop for valise in *valises*
-			do (if(= (slot-value valise 'couche) 1) (push (slot-value valise 'categorie) couche1)
-			(push (slot-value valise 'categorie) couche2)))
-
-		 (setq couche1 (sort couche1 #'<))
-		 (setq couche2 (sort couche2 #'<))
-		 
-		 (setq concatenated (parse-integer (format nil "~{~a~}" couche1)))
-		 
-		 (format t "Concat: ~a~%" concatenated)
-		 (format t "Couche 1: ~a~%" couche1)
-		 (format t "Couche 2: ~a~%" couche2)
-
-		 (if (member concatenated sets)
-			(format t "The item is in the list.~%")
-			(format t "The item is not in the list.~%"))
-			
+      (loop for valise in *valises*
+         do (if (= (slot-value valise 'couche) 1)
+            (push (slot-value valise 'categorie) couche1)
+            (if (= (slot-value valise 'couche) 2)
+               (push (slot-value valise 'categorie) couche2))))			
          (let ((choix-model (show-model-valises *valises* res state))); Montre les valises au modèle et enregistre la key pressée par le model
+
             (when (string-equal "L" choix-model) (progn
                (if (= level 1)
 					(progn 
 						(setf level 2)
 						(setf state "third-luggage-2"))
 					(setf level 1)))) ;Switches the level
+
 			(when (string-equal "6" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
-               (setf (slot-value (nth 5 *valises*) 'couche) level) ; Met la sixième valise sur la couche level
+               (if (= level 1)
+                  (progn
+                     (push (slot-value (nth 5 *valises*) 'categorie) couche1)
+                     (setq couche1 (sort couche1 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                  (progn
+                     (push (slot-value (nth 5 *valises*) 'categorie) couche2)
+                     (setq couche2 (sort couche2 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                  ))
+		         (if (member concatenated sets)
+			         (progn 
+                     (setf (slot-value (nth 5 *valises*) 'couche) level))) ; Met la sixième valise sur la couche level
 			   (if (= level 1)
 				  (setf state "switch-level")
-				  (setf state "finish")))) 			   
+				  (setf state "finish"))))
+
 			(when (string-equal "5" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
-               (setf (slot-value (nth 4 *valises*) 'couche) level) ; Met la cinquième valise sur la couche level
+               (if (= level 1)
+                  (progn
+                     (push (slot-value (nth 4 *valises*) 'categorie) couche1)
+                     (setq couche1 (sort couche1 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                  (progn
+                     (push (slot-value (nth 4 *valises*) 'categorie) couche2)
+                     (setq couche2 (sort couche2 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                  ))
+		         (if (member concatenated sets)
+			         (progn 
+                     (setf (slot-value (nth 4 *valises*) 'couche) level))) ; Met la cinquième valise sur la couche level
 			   (if (= level 1)
 				  (setf state "sixth-luggage")
 				  (setf state "sixth-luggage-2"))))
+
 			(when (string-equal "4" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
-               (setf (slot-value (cadddr *valises*) 'couche) level) ; Met la quatirème valise sur la couche level
+               (if (= level 1)
+                  (progn
+                     (push (slot-value (cadddr *valises*) 'categorie) couche1)
+                     (setq couche1 (sort couche1 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                  (progn
+                     (push (slot-value (cadddr *valises*) 'categorie) couche2)
+                     (setq couche2 (sort couche2 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                  ))
+		         (if (member concatenated sets)
+			         (progn 
+                     (setf (slot-value (cadddr *valises*) 'couche) level))) ; Met la quatrième valise sur la couche level
 			   (if (= level 1)
 				  (setf state "fifth-luggage")
 				  (setf state "fifth-luggage-2"))))
+
 			(when (string-equal "3" choix-model) (progn
                (setf compteur (+ compteur 1)) ;; incrémente compteur
-               (setf (slot-value (caddr *valises*) 'couche) level) ; Met la troisième valise sur la couche level
+               (if (= level 1)
+                  (progn
+                     (push (slot-value (caddr *valises*) 'categorie) couche1)
+                     (setq couche1 (sort couche1 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                  (progn
+                     (push (slot-value (caddr *valises*) 'categorie) couche2)
+                     (setq couche2 (sort couche2 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                  ))
+		         (if (member concatenated sets)
+			         (progn 
+                     (setf (slot-value (caddr *valises*) 'couche) level))) ; Met la troisième valise sur la couche level
                (if (= level 1) 
 				  (setf state "fourth-luggage")
 				  (setf state "fourth-luggage-2"))))  
-                ;; mettre state à weight-problem si key 1
+              
             (when (string-equal "2" choix-model) (progn
                (setf compteur (+ compteur 1))
-               (setf (slot-value (cadr *valises*) 'couche) level) ; Met la deuxième valise sur la couche level
+               (if (= level 1)
+                  (progn
+                     (push (slot-value (cadr *valises*) 'categorie) couche1)
+                     (setq couche1 (sort couche1 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                  (progn
+                     (push (slot-value (cadr *valises*) 'categorie) couche2)
+                     (setq couche2 (sort couche2 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                  ))
+		         (if (member concatenated sets)
+			         (progn 
+                     (setf (slot-value (cadr *valises*) 'couche) level))) ; Met la deuxième valise sur la couche level
                (if (= level 1)
 				  (setf state "third-luggage")
-				  (setf state "third-luggage-2"))))  
+				  (setf state "third-luggage-2"))))
+
             (when (string-equal "1" choix-model) (progn
                (setf compteur (+ compteur 1))
-               (setf (slot-value (car *valises*) 'couche) level); Met la première valise sur la couche level
+               (if (= level 1)
+                  (progn
+                     (push (slot-value (car *valises*) 'categorie) couche1)
+                     (setq couche1 (sort couche1 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                  (progn
+                     (push (slot-value (car *valises*) 'categorie) couche2)
+                     (setq couche2 (sort couche2 #'<))
+                     (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                  ))
+		         (if (member concatenated sets)
+			         (progn 
+                     (setf (slot-value (car *valises*) 'couche) level))) ; Met la première valise sur la couche level
 			   (if (= level 1)
 				  (setf state "second-luggage")
-				  (setf state "second-luggage-2")))) 
+				  (setf state "second-luggage-2"))))
             (when (string-equal "F" choix-model) (progn
-				(format t "Here")
 				(setf res "win") ;; De base on win
 				(setf poids-tot-couche-1 0)
 				(setf poids-tot-couche-2 0)
@@ -288,7 +351,7 @@
                   ;; Assigner un poids et une catégorie aléatoirement
                   (setf (slot-value new-valise 'poids) (1+ (act-r-random 5)))
                   (setf (slot-value new-valise 'categorie) (1+ (act-r-random 3)))
-                  (setf (slot-value new-valise 'couche) 1)
+                  (setf (slot-value new-valise 'couche) 0)
                   ;; Dimension selon la catégorie
                   (case (slot-value new-valise 'categorie)
                   (1 (progn (setf (slot-value new-valise 'x) 3) (setf (slot-value new-valise 'y) 3)))
@@ -318,7 +381,7 @@
       do (progn
             (setf (slot-value valise 'poids) (1+ (act-r-random 5))) ;; poids aléatoire
             (setf (slot-value valise 'categorie) (1+ (act-r-random 3))) ;; categorie aléatoire
-            (setf (slot-value valise 'couche) 1) ;; couche
+            (setf (slot-value valise 'couche) 0) ;; couche
             ;; Dimension selon la catégorie
             (case (slot-value valise 'categorie)
                (1 (progn (setf (slot-value valise 'x) 3) (setf (slot-value valise 'y) 3)))
