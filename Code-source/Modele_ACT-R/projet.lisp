@@ -138,70 +138,24 @@
    (/ (/ moyenne n-times) 3.0))
 
 
-
-;; (defun show-model-valises(valises &optional res state)
-
-;;    (let* 
-;;       ( (cc1 (slot-value (nth 0 valises) 'categorie)) 
-;;         (cc2 (slot-value (nth 1 valises) 'categorie))
-;;         (cc3 (slot-value (nth 2 valises) 'categorie))
-
-;;         (cc4 (if (>= (length *valises*) 4) (slot-value (nth 3 valises) 'categorie) nil))
-;;         (cc5 (if (>= (length *valises*) 5) (slot-value (nth 4 valises) 'categorie) nil))
-;;         (cc6 (if (>= (length *valises*) 6) (slot-value (nth 5 valises) 'categorie) nil))
-
-;;         (pp1 (slot-value (nth 0 valises) 'poids))
-;;         (pp2 (slot-value (nth 1 valises) 'poids))
-;;         (pp3 (slot-value (nth 2 valises) 'poids))
-
-;;         (pp4 (if (>= (length *valises*) 4) (slot-value (nth 3 valises) 'poids) nil))
-;;         (pp5 (if (>= (length *valises*) 5) (slot-value (nth 4 valises) 'poids) nil))
-;;         (pp6 (if (>= (length *valises*) 6) (slot-value (nth 5 valises) 'poids) nil))
-
-;;         (nl1 (slot-value (nth 0 valises) 'couche))
-;;         (nl2 (slot-value (nth 1 valises) 'couche))
-;;         (nl3 (slot-value (nth 2 valises) 'couche))
-
-;;         (nl4 (if (>= (length *valises*) 4) (slot-value (nth 3 valises) 'couche) nil))
-;;         (nl5 (if (>= (length *valises*) 5) (slot-value (nth 4 valises) 'couche) nil))
-;;         (nl6 (if (>= (length *valises*) 6) (slot-value (nth 5 valises) 'couche) nil))
-;;       )
-
-;;       (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
-;;          (mod-focus-fct `(c1 ,cc1  c2 ,cc2  c3 ,cc3  c4 , cc4  c5 , cc5  c6 , cc6  
-;;                           p1 ,pp1  p2 ,pp2  p3 ,pp3  p4 , pp4  p5 , pp5  p6 , pp6
-;;                           l1 ,nl1  l2 ,nl2  l3 ,nl3  l4 , nl4  l5 , nl5  l6 , nl6
-;;                               result , res
-;;                               state , state
-;;                            )
-;;          )
-;;          (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
-;;                               `((isa arrange-state c1 , cc1  c2 , cc2  c3 , cc3  c4 , cc4  c5 , cc5  c6 , cc6
-;;                                                    p1 , pp1  p2 , pp2  p3 , pp3  p4 , pp4  p5 , pp5  p6 , pp6 
-;;                                                    l1 , nl1  l2 , nl2  l3 , nl3  l4 , nl4  l5 , nl5  l6 , nl6
-;;                                     result , res
-;;                                     state , state))))
-;;          )
-;;       )
-;;    )
-   
-;;    (setf *model-action-list* nil) ;; En théorie on doit le remettre à nil si on recommence
-;;    (run-full-time 10)
-;;    (reverse *model-action-list*)
-;; )
-
-
+;; Gère 3 à 6 valises, chacune avec les attributs : categorie, poids, et couche.
+;; Les valises manquantes sont représentées par nil pour leurs attributs.
+;; - valises : Liste de 3 à 6 valises.
+;; - res (optionnel) : Résultat associé à l'état.
+;; - state (optionnel) : État actuel.
+;; Modifie ou crée un chunk dans le buffer de but selon la présence d'un chunk existant.
+;; Affiche une erreur si le nombre de valises n'est pas compris entre 3 et 6.
 (defun show-model-valises (valises &optional res state)
   (let* ((valise-count (length valises))
          (goal-buffer-exists (buffer-read 'goal))
-         (chunks (when (> valise-count 2)
-                   (mapcar (lambda (n) 
-                             (when (< n valise-count)
+         (chunks (mapcar (lambda (n) 
+                           (if (< n valise-count)
                                (let ((valise (nth n valises)))
                                  (list (slot-value valise 'categorie)
                                        (slot-value valise 'poids)
-                                       (slot-value valise 'couche)))))
-                           (list 0 1 2 3 4 5))))
+                                       (slot-value valise 'couche)))
+                             '(nil nil nil)))
+                         (list 0 1 2 3 4 5)))
          (formatted-chunks `(c1 ,(nth 0 (car chunks)) c2 ,(nth 0 (cadr chunks)) c3 ,(nth 0 (caddr chunks)) c4 ,(nth 0 (cadddr chunks)) c5 ,(nth 0 (nth 4 chunks)) c6 ,(nth 0 (nth 5 chunks))
                             p1 ,(nth 1 (car chunks)) p2 ,(nth 1 (cadr chunks)) p3 ,(nth 1 (caddr chunks)) p4 ,(nth 1 (cadddr chunks)) p5 ,(nth 1 (nth 4 chunks)) p6 ,(nth 1 (nth 5 chunks))
                             l1 ,(nth 2 (car chunks)) l2 ,(nth 2 (cadr chunks)) l3 ,(nth 2 (caddr chunks)) l4 ,(nth 2 (cadddr chunks)) l5 ,(nth 2 (nth 4 chunks)) l6 ,(nth 2 (nth 5 chunks))
@@ -212,77 +166,10 @@
       (mod-focus-fct formatted-chunks))
      ((> valise-count 2)
       (goal-focus-fct (car (define-chunks-fct `(isa arrange-state ,@formatted-chunks)))))
-     (format t "Error: valises list length is not between 3 and 6."))
+     (t (format t "Error: valises list length is not between 3 and 6.")))
     (run-full-time 10)
     *model-action*))
 
-
-
-
-;; (defun show-model-valises(valises &optional res state)
-;;    (if (= (length valises) 3)
-;;       (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
-;;          (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 nil c5 nil c6 nil
-;;                               p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 nil p5 nil p6 nil
-;;                               l1 ,(slot-value (car valises) 'couche)  l2 ,(slot-value (cadr valises) 'couche) l3 ,(slot-value (caddr valises) 'couche) l4 nil l5 nil l6 nil
-;;                               result , res
-;;                               state , state))
-;;          (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
-;;                               `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 nil c5 nil c6 nil
-;;                                     p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 nil p5 nil p6 nil
-;;                                     l1 ,(slot-value (car valises) 'couche)  l2 ,(slot-value (cadr valises) 'couche) l3 ,(slot-value (caddr valises) 'couche) l4 nil l5 nil l6 nil
-;;                                     result , res
-;;                                     state , state)))))
-;;       )
-;;       (if (= (length valises) 4)
-;;          (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
-;;             (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 ,(slot-value (cadddr valises) 'categorie) c5 nil c6 nil
-;;                                  p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids) p5 nil p6 nil
-;;                                  l1 ,(slot-value (car valises) 'couche)  l2 ,(slot-value (cadr valises) 'couche) l3 ,(slot-value (caddr valises) 'couche) l4 ,(slot-value (caddr valises) 'couche) l5 nil l6 nil
-;;                                  result , res
-;;                                  state , state))
-;;             (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
-;;                                  `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 ,(slot-value (cadddr valises) 'categorie) c5 nil c6 nil
-;;                                        p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids) p5 nil p6 nil
-;;                                        l1 ,(slot-value (car valises) 'couche)  l2 ,(slot-value (cadr valises) 'couche) l3 ,(slot-value (caddr valises) 'couche) l4 ,(slot-value (caddr valises) 'couche) l5 nil l6 nil
-;;                                        result , res
-;;                                        state , state)))))
-;;          )
-;;          (if (= (length valises) 5)
-;;             (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
-;;                (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 ,(slot-value (cadddr valises) 'categorie) c5 ,(slot-value (nth 4 valises) 'categorie) c6 nil
-;;                                     p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids) p5 ,(slot-value (nth 4 valises) 'poids) p6 nil
-;;                                     l1 ,(slot-value (car valises) 'couche)  l2 ,(slot-value (cadr valises) 'couche) l3 ,(slot-value (caddr valises) 'couche) l4 ,(slot-value (caddr valises) 'couche) l5 ,(slot-value (nth 4 valises) 'couche) l6 nil
-;;                                     result , res
-;;                                     state , state))
-;;                (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
-;;                                     `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 ,(slot-value (cadddr valises) 'categorie) c5 ,(slot-value (nth 4 valises) 'categorie) c6 nil
-;;                                           p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids) p5 ,(slot-value (nth 4 valises) 'poids) p6 nil
-;;                                           l1 ,(slot-value (car valises) 'couche)  l2 ,(slot-value (cadr valises) 'couche) l3 ,(slot-value (caddr valises) 'couche) l4 ,(slot-value (caddr valises) 'couche) l5 ,(slot-value (nth 4 valises) 'couche) l6 nil
-;;                                           result , res
-;;                                           state , state)))))
-;;             )
-;;             (if (= (length valises) 6)
-;;                (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
-;;                   (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 ,(slot-value (cadddr valises) 'categorie) c5 ,(slot-value (nth 4 valises) 'categorie) c6 ,(slot-value (nth 5 valises) 'categorie)
-;;                                        p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids) p5 ,(slot-value (nth 4 valises) 'poids) p6 ,(slot-value (nth 5 valises) 'poids)
-;;                                        l1 ,(slot-value (car valises) 'couche)  l2 ,(slot-value (cadr valises) 'couche) l3 ,(slot-value (caddr valises) 'couche) l4 ,(slot-value (caddr valises) 'couche) l5 ,(slot-value (nth 4 valises) 'couche) l6 ,(slot-value (nth 5 valises) 'couche)
-;;                                        result , res
-;;                                        state , state))
-;;                   (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
-;;                                        `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie) c4 ,(slot-value (cadddr valises) 'categorie) c5 ,(slot-value (nth 4 valises) 'categorie) c6 ,(slot-value (nth 5 valises) 'categorie)
-;;                                              p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids) p4 ,(slot-value (cadddr valises) 'poids) p5 ,(slot-value (nth 4 valises) 'poids) p6 ,(slot-value (nth 5 valises) 'poids)
-;;                                              l1 ,(slot-value (car valises) 'couche)  l2 ,(slot-value (cadr valises) 'couche) l3 ,(slot-value (caddr valises) 'couche) l4 ,(slot-value (caddr valises) 'couche) l5 ,(slot-value (nth 4 valises) 'couche) l6 ,(slot-value (nth 5 valises) 'couche)
-;;                                              result , res
-;;                                              state , state))))))
-;;                   (format t "Error: valises list length is not between 3 and 6.")
-;;             )
-;;          )
-;;       )
-;;    )
-   
-;;    (run-full-time 10) 
-;;    *model-action*)
 
 (defun show-model-result(res state)
    (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
