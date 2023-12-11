@@ -10,6 +10,8 @@
       (setf not-win t)
       (setf res nil)
       (setf state nil)
+      (setf remembering nil)
+      (setf current 0)
 	  (setf level 1)
       (setf *additional-valises-count* (act-r-random 4)) ;; generer un nombre aleatoire entre 0 et 3 pour le nombre de valises additionnelles
       (format t "Nombre de valises additionnelles: ~a~%" *additional-valises-count*)
@@ -19,13 +21,58 @@
           ;  do (setf (slot-value valise 'couche) 1))
 		 (setq couche1 '())
 		 (setq couche2 '())
-		 
       (loop for valise in *valises*
          do (if (= (slot-value valise 'couche) 1)
             (push (slot-value valise 'categorie) couche1)
             (if (= (slot-value valise 'couche) 2)
                (push (slot-value valise 'categorie) couche2))))			
          (let ((choix-model (show-model-valises *valises* res state))); Montre les valises au modèle et enregistre la key pressée par le model
+            (if (not (null remembering)) (progn
+               (when (string-equal "1" choix-model) (progn
+               (if (= current 1) (progn
+                  (setf (slot-value (car *valises*) 'couche) 1); Met la première valise sur la couche rappelée
+                  (setf state "second-luggage-r"))) 
+               (if (= current 2) (progn
+                  (setf (slot-value (cadr *valises*) 'couche) 1); Met la première valise sur la couche rappelée
+                  (setf state "third-luggage-r"))) 
+               (if (= current 3) (progn
+                  (setf (slot-value (caddr *valises*) 'couche) 1); Met la première valise sur la couche rappelée
+                  (setf state "fourth-luggage-r"))) 
+               (if (= current 4) (progn
+                  (setf (slot-value (cadddr *valises*) 'couche) 1); Met la première valise sur la couche rappelée
+                  (setf state "fifth-luggage-r"))) 
+               (if (= current 5) (progn
+                  (setf (slot-value (nth 4 *valises*) 'couche) 1); Met la première valise sur la couche rappelée
+                  (setf state "sixth-luggage-r"))) 
+               (if (= current 6) (progn
+                  (setf (slot-value (nth 5 *valises*) 'couche) 1); Met la première valise sur la couche rappelée
+                  (setf state "finish"))) 
+               ))
+               
+               (when (string-equal "2" choix-model) (progn
+                              (if (= current 1) (progn
+                  (setf (slot-value (car *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                  (setf state "second-luggage-r"))) 
+               (if (= current 2) (progn
+                  (setf (slot-value (cadr *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                  (setf state "third-luggage-r"))) 
+               (if (= current 3) (progn
+                  (setf (slot-value (caddr *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                  (setf state "fourth-luggage-r"))) 
+               (if (= current 4) (progn
+                  (setf (slot-value (cadddr *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                  (setf state "fifth-luggage-r"))) 
+               (if (= current 5) (progn
+                  (setf (slot-value (nth 4 *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                  (setf state "sixth-luggage-r"))) 
+               (if (= current 6) (progn
+                  (setf (slot-value (nth 5 *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                  (setf state "finish"))) 
+               )))
+            
+            (progn (when (string-equal "R" choix-model) (progn
+               (setf remember t)
+               (setf state "first-luggage-r"))) ;Switches to remembering
 
             (when (string-equal "L" choix-model) (progn
                (if (= level 1)
@@ -146,7 +193,7 @@
                      (setf (slot-value (car *valises*) 'couche) level))) ; Met la première valise sur la couche level
 			   (if (= level 1)
 				  (setf state "second-luggage")
-				  (setf state "second-luggage-2"))))
+				  (setf state "second-luggage-2"))))))
             (when (string-equal "F" choix-model) (progn
 				(setf res "win") ;; De base on win
 				(setf poids-tot-couche-1 0)
@@ -161,9 +208,8 @@
 				(if (> poids-tot-couche-2 poids-tot-couche-1)
 					(setf res "lose") ; Si les valises en couche 2 sont plus lourdes -> lose
 					(progn (setf not-win nil)
-						(unless (string-equal choix-model "0")(progn 
-							(setf state "final")
-							(show-model-result res state))))))))
+					(setf state "final")
+					(show-model-result res state))))))
 
             (when draw-valises
             ;; Affichage du message avec les caractéristiques des valises
@@ -217,7 +263,7 @@
                                  (list (slot-value valise 'categorie)
                                        (slot-value valise 'poids)
                                        (slot-value valise 'couche)))
-                             '(nil nil nil)))
+                             '(0 0 0)))
                          (list 0 1 2 3 4 5)))
          (formatted-chunks `(c1 ,(nth 0 (car chunks)) c2 ,(nth 0 (cadr chunks)) c3 ,(nth 0 (caddr chunks)) c4 ,(nth 0 (cadddr chunks)) c5 ,(nth 0 (nth 4 chunks)) c6 ,(nth 0 (nth 5 chunks))
                             p1 ,(nth 1 (car chunks)) p2 ,(nth 1 (cadr chunks)) p3 ,(nth 1 (caddr chunks)) p4 ,(nth 1 (cadddr chunks)) p5 ,(nth 1 (nth 4 chunks)) p6 ,(nth 1 (nth 5 chunks))
@@ -415,8 +461,7 @@
 
 (install-device (open-exp-window "" :visible nil))
 
-;; La variable second-l indique quelle valise se trouve sur le 2ème niveau (ex. second-l = 1, valise 1 est sur le deuxième niveau)
-(chunk-type arrange-state c1 c2 c3 c4 c5 c6 p1 p2 p3 p4 p5 p6 l1 l2 l3 l4 l5 l6 result state )
+(chunk-type arrange-state c1 c2 c3 c4 c5 c6 p1 p2 p3 p4 p5 p6 l1 l2 l3 l4 l5 l6 r1 r2 r3 r4 r5 r6 result state)
 
 (chunk-type learned-info c1 c2 c3 c4 c5 c6 p1 p2 p3 p4 p5 p6 l1 l2 l3 l4 l5 l6)
 (declare-buffer-usage goal arrange-state :all)
@@ -444,38 +489,183 @@
         c1  =a
         c2  =b
         c3  =c
-        p1  =j
-        p2  =k
-        p3  =l
+        c4  =d
+        c5  =e
+        c6  =f
+        p1  =g
+        p2  =h
+        p3  =i
+        p4  =j
+        p5  =k
+        p6  =l
    ==>
    +retrieval> 
         isa learned-info
         c1  =a
         c2  =b
         c3  =c
-        p1  =j
-        p2  =k
-        p3  =l
-      - second-l nil
+        c4  =d
+        c5  =e
+        c6  =f
+        p1  =g
+        p2  =h
+        p3  =i
+        p4  =j
+        p5  =k
+        p6  =l
    =goal>
         state remembering
 )
+
 (p remember-organization
     =goal>
        isa arrange-state
        state remembering
     =retrieval>
        isa learned-info
-       second-l =second-l
+        l1  =val1
+        l2  =val2
+        l3  =val3
+        l4  =val4
+        l5  =val5
+        l6  =val6
    ?manual>
       state free
     ==>
     =goal>
-       second-l =second-l
+       isa arrange-state
+        r1  =val1
+        r2  =val2
+        r3  =val3
+        r4  =val4
+        r5  =val5
+        r6  =val6     
    +manual>
       cmd press-key
-      key =second-l
+      key "R"
 )
+
+(p first-luggage-r
+   =goal>
+      state "first-luggage-r"
+      r1 =l
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p second-luggage-r
+   =goal>
+      state "second-luggage-r"
+      r2 =l
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p third-luggage-r
+   =goal>
+      state "third-luggage-r"
+      r3 =l
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p fourth-luggage-r
+   =goal>
+      state "fourth-luggage-r"
+      r4 =l
+   -  r4 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p no-fourth-luggage-r
+   =goal>
+      state "fourth-luggage-r"
+      r4 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state "finish"
+)
+
+(p fifth-luggage-r
+   =goal>
+      state "fifth-luggage-r"
+      r5 =l
+   -  r5 0
+
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p no-fifth-luggage-r
+   =goal>
+      state "fifth-luggage-r"
+      r5 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state "finish"
+)
+
+(p sixth-luggage-r
+   =goal>
+      state "sixth-luggage-r"
+      r6 =l
+   -  r6 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p no-sixth-luggage-r
+   =goal>
+      state "sixth-luggage-r"
+      r6 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state "finish"
+)
+
 (p doesnt-remember-organization
     =goal>
        isa arrange-state
@@ -494,7 +684,6 @@
    ==>
    =goal>
       state verifying
-	  l1 1
    +manual>
       cmd press-key
       key "1"
@@ -507,7 +696,6 @@
    ==>
    =goal>
       state verifying
-	  l2 1
    +manual>
       cmd press-key
       key "2"
@@ -527,7 +715,7 @@
 (p fourth-luggage
    =goal>
       state "fourth-luggage"
-	- c4 nil
+	- c4 0
    ?manual>
       state free
    ==>
@@ -540,7 +728,7 @@
 (p no-fourth-luggage
    =goal>
       state "fourth-luggage"
-	  c4 nil 
+	  c4 0 
    ==>
    =goal>
       state "switch-level"
@@ -548,7 +736,7 @@
 (p fifth-luggage
    =goal>
       state "fifth-luggage"
-	  - c5 nil
+	  - c5 0
    ?manual>
       state free	  
    ==>
@@ -561,7 +749,7 @@
 (p no-fifth-luggage
    =goal>
       state "fifth-luggage"
-	  c5 nil
+	  c5 0
    ==>
    =goal>
       state "switch-level"
@@ -569,7 +757,7 @@
 (p sixth-luggage
    =goal>
       state "sixth-luggage"
-	  - c6 nil 
+	  - c6 0 
    ?manual>
       state free
    ==>
@@ -582,7 +770,7 @@
 (p no-sixth-luggage
    =goal>
       state "sixth-luggage"
-	  c6 nil 
+	  c6 0 
    ==>
    =goal>
       state "switch-level"
@@ -623,7 +811,7 @@
 (p fourth-luggage-2
    =goal>
       state "fourth-luggage-2"
-	- c4 nil
+	- c4 0
 	- l4 1
    ?manual>
       state free
@@ -645,7 +833,7 @@
 (p no-fourth-luggage-2
    =goal>
       state "fourth-luggage-2"
-	  c4 nil 
+	  c4 0 
    ==>
    =goal>
       state "finish"
@@ -653,7 +841,7 @@
 (p fifth-luggage-2
    =goal>
       state "fifth-luggage-2"
-	- c5 nil 
+	- c5 0 
 	- l5 1
    ?manual>
       state free
@@ -675,7 +863,7 @@
 (p no-fifth-luggage-2
    =goal>
       state "fifth-luggage-2"
-	  c5 nil 
+	  c5 0 
    ==>
    =goal>
       state "finish"
@@ -683,7 +871,7 @@
 (p sixth-luggage-2
    =goal>
       state "sixth-luggage-2"
-	- c6 nil 
+	- c6 0 
 	- l6 1
    ?manual>
       state free
@@ -705,7 +893,7 @@
 (p no-sixth-luggage-2
    =goal>
       state "sixth-luggage-2"
-	  c6 nil 
+	  c6 0 
    ==>
    =goal>
       state "finish"
@@ -723,13 +911,62 @@
       cmd press-key
       key "F"
 )
+(p memorize
+    =goal>
+        state "final"
+        result "win"
+        c1  =a
+        c2  =b
+        c3  =c
+        c4  =d
+        c5  =e
+        c6  =f
+        p1  =g
+        p2  =h
+        p3  =i
+        p4  =j
+        p5  =k
+        p6  =l
+        l1  =m
+        l2  =n
+        l3  =o
+        l4  =p
+        l5  =q
+        l6  =r
+    ?imaginal>
+        state free    
+    ==>
+    =goal>
+        state finish
+    +imaginal>
+        c1  =a
+        c2  =b
+        c3  =c
+        c4  =d
+        c5  =e
+        c6  =f
+        p1  =g
+        p2  =h
+        p3  =i
+        p4  =j
+        p5  =k
+        p6  =l
+        l1  =m
+        l2  =n
+        l3  =o
+        l4  =p
+        l5  =q
+        l6  =r
+)
 (p show-organization
    =goal>
-      state "final"
+      state finish
       result "win"
    ?manual>
       state free
     ==>
+    =goal>
+        state "end"
    +manual>
       cmd press-key
       key "0"
@@ -740,5 +977,18 @@
         buffer full
     ==>
     -imaginal>
+)
+(p show-organization-lose
+   =goal>
+      state verifying
+      result "lose"
+   ?manual>
+      state free
+    ==>
+    =goal>
+        state "end"
+   +manual>
+      cmd press-key
+      key "0"
 )
 )
