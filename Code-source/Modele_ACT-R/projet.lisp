@@ -263,7 +263,7 @@
 				   ((= nb 1) (draw1little)))))
 
    (setf moyenne (+ moyenne compteur)))
-   (/ (/ moyenne n-times) 3.0))
+   (/ (/ moyenne n-times) 2))
 
 
 ;; Gère 3 à 6 valises, chacune avec les attributs : categorie, poids, et couche.
@@ -336,20 +336,12 @@
       (add-line-to-exp-window (list 45 (+ 10 (* i 40))) (list 550 (+ 10 (* i 40))) :color 'white :window "Data"))
     
     (let ((x 50))
-      (mapcar (lambda (a b) (add-line-to-exp-window (list x (floor (- 410 (* a 100))))
-                                                  (list (incf x 25) (floor (- 410 (* b 100))))
+      (mapcar (lambda (a b) (add-line-to-exp-window (list x (floor (- 510 (* a 100))))
+                                                    (list (incf x 25) (floor (- 510 (* b 100))))
                                                     :color 'blue :window "Data"))
         (butlast points) (cdr points)))
     (allow-event-manager w)))
 
-
-(defvar *model-action* nil) ;; La variable que le model devra remplir (liste de valise)
-
-(defmethod rpm-window-key-event-handler ((win rpm-window) key)
-  (if (eq win (current-device))
-      (setf *model-action* (string key))
-    (unless *human-action*
-      (setf *human-action* (string key)))))
 
 ;;; Classe valise
 (defclass valise()
@@ -495,6 +487,7 @@
     (finish isa chunk)
 )
 
+;; Définition des procédures
 (p start
    =goal>
         isa arrange-state
