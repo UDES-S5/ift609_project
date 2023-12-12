@@ -6,7 +6,7 @@
 
 (place-valises 1 t): execute le modele une seul fois et affiche l'organisation des valises dans le coffre.
 
-(show-learning 20): execute 20 blocs de 100 et affiche le graphe d'apprentissage.
+(show-learning 20): execute 20 blocs de 1000 et affiche le graphe d'apprentissage.
 
 
 - les valeurs numériques des paramétres peuvent être changées, selon le besoin.
