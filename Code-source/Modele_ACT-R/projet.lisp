@@ -1,109 +1,303 @@
-
-
-
 (clear-all)
 
 ;;; Fonction pour placer les valises dans le coffre
 
 (defun place-valises(n-times &optional (draw-valises nil))
-
+   (setq sets '(1111 111 222 112 113 11 22 33 12 13 23 1 2 3)) ;Arrangements possibles sur un niveau
    (setf moyenne 0)
    (dotimes (i n-times)
       (setf compteur 1)
       (setf not-win t)
       (setf res nil)
       (setf state nil)
-      (setf *valises* (create-valises)); Creation des valises
+      (setf remembering nil)
+      (setf current 1)
+	   (setf level 1)
+      (setf *additional-valises-count* (act-r-random 4)) ;; generer un nombre aleatoire entre 0 et 3 pour le nombre de valises additionnelles
+      (format t "Nombre de valises additionnelles: ~a~%" *additional-valises-count*)
+      (setf *valises* (create-valises *additional-valises-count*))
       (while not-win ; appeler le modèle tant qu'il n'a pas win
-         (setf (slot-value (car *valises*) 'couche) 1)
-         (setf (slot-value (cadr *valises*) 'couche) 1)
-         (setf (slot-value (caddr *valises*) 'couche) 1)
-         (let ((choix-model (show-model-valises *valises* res state))); Montre les valises au modèle et enregistre la key pressée par le model
-            
-            (when (string-equal "1" choix-model) (progn
-               (setf compteur (+ compteur 1)) ;; incrémente compteur
-               (setf (slot-value (caddr *valises*) 'couche) 2)
-               (setf state "weight-problem"))) ; Met la troisième valise en couche 2
-                ;; mettre state à weight-problem si key 1
-            (when (string-equal "2" choix-model) (progn
-               (setf compteur (+ compteur 1))
-               (setf (slot-value (cadr *valises*) 'couche) 2)
-               (setf state "weight-problem-2"))) ; Met la deuxième valise en couche 2
-            (setf res "win") ;; De base on win
-            (setf poids-tot-couche-1 0)
-            (setf poids-tot-couche-2 0)
-            (loop for valise in *valises* ; boucle sur les valises choisi par le modèle
-               do (if (= (slot-value valise 'couche) 1)
-                     ;; Si la valise est couche 1
-                     (setf poids-tot-couche-1 (+ poids-tot-couche-1 (slot-value valise 'poids))) ; Adition du poids de la valise
-                     ;; Si la valise est couche 2
-                     (setf poids-tot-couche-2 (+ poids-tot-couche-2 (slot-value valise 'poids))))) ; Adition du poids de la valise
-            ;(setf choix-model "0")
-            (if (> poids-tot-couche-2 poids-tot-couche-1)
-               (setf res "lose") ; Si les valises en couche 2 sont plus lourdes -> lose
-               (progn (setf not-win nil)
-                      (unless (string-equal choix-model "0")(progn 
-                        (setf state "final")
-                        (show-model-result res state))))))
-            (when draw-valises
-            (print-valise (car *valises*))
-            (print-valise (cadr *valises*))
-            (print-valise (caddr *valises*))
-               (if (and (= (slot-value (car *valises*) 'couche) 1) (= (slot-value (cadr *valises*) 'couche) 1) (= (slot-value (caddr *valises*) 'couche) 1))
-                  (progn
-                     (setf nb 0)
-                     (setf grandevalise (car *valises*))
-                     (loop for valise in *valises*
-                        do (if (= (slot-value valise 'categorie) 1)
-                           (setf nb (+ nb 1))
-                           (setf grandevalise valise)))
-                     (if (>= nb 2)
-                        (progn 
-                           (draw2little)
-                           (draw-valise grandevalise)
-                        )
-                        (progn
-                           (format t "Niveau 1:~%")
-                           (loop for valise in *valises*
-                              do (when (= (slot-value valise 'couche) 1)
-                                 (progn (draw-valise valise) (format t "~%"))))
-                           (format t "~%Niveau 2:~%")
-                           (loop for valise in *valises*
-                              do (when (= (slot-value valise 'couche) 2)
-                                 (draw-valise valise)))
-                        ))
+         ;(loop for valise in *valises*
+         ;  do (setf (slot-value valise 'couche) 1))
+         (setq couche1 '())
+         (setq couche2 '())
+         (loop for valise in *valises*
+            do (if (= (slot-value valise 'couche) 1)
+               (push (slot-value valise 'categorie) couche1)
+               (if (= (slot-value valise 'couche) 2)
+                  (push (slot-value valise 'categorie) couche2))))			
+            (let ((choix-model (show-model-valises *valises* res state))); Montre les valises au modèle et enregistre la key pressée par le model
+               (if (not (null remembering)) (progn
+                  (when (string-equal "1" choix-model) (progn
+                     (if (= current 1) (progn
+                        (setf (slot-value (car *valises*) 'couche) 1); Met la première valise sur la couche rappelée
+                        (setf state "second-luggage-r"))) 
+                     (if (= current 2) (progn
+                        (setf (slot-value (cadr *valises*) 'couche) 1); Met la 2e valise sur la couche rappelée
+                        (setf state "third-luggage-r"))) 
+                     (if (= current 3) (progn
+                        (setf (slot-value (caddr *valises*) 'couche) 1); Met la 3e valise sur la couche rappelée
+                        (setf state "fourth-luggage-r"))) 
+                     (if (= current 4) (progn
+                        (setf (slot-value (cadddr *valises*) 'couche) 1); Met la 4e valise sur la couche rappelée
+                        (setf state "fifth-luggage-r"))) 
+                     (if (= current 5) (progn
+                        (setf (slot-value (nth 4 *valises*) 'couche) 1); Met la 5e valise sur la couche rappelée
+                        (setf state "sixth-luggage-r"))) 
+                     (if (= current 6) (progn
+                        (setf (slot-value (nth 5 *valises*) 'couche) 1); Met la 6e valise sur la couche rappelée
+                        (setf state "finish")))
+
+                     (setf current (+ current 1))
+                     (setf compteur (+ compteur 1))
+                  ))
+                  
+                  (when (string-equal "2" choix-model) (progn
+                     (if (= current 1) (progn
+                        (setf (slot-value (car *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                        (setf state "second-luggage-r"))) 
+                     (if (= current 2) (progn
+                        (setf (slot-value (cadr *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                        (setf state "third-luggage-r"))) 
+                     (if (= current 3) (progn
+                        (setf (slot-value (caddr *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                        (setf state "fourth-luggage-r"))) 
+                     (if (= current 4) (progn
+                        (setf (slot-value (cadddr *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                        (setf state "fifth-luggage-r"))) 
+                     (if (= current 5) (progn
+                        (setf (slot-value (nth 4 *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                        (setf state "sixth-luggage-r"))) 
+                     (if (= current 6) (progn
+                        (setf (slot-value (nth 5 *valises*) 'couche) 2); Met la première valise sur la couche rappelée
+                        (setf state "finish"))) 
+                     
+                     (setf current (+ current 1))
+                     (setf compteur (+ compteur 1))
                   )
+               ))
+               
+               (progn (when (string-equal "R" choix-model) (progn
+                  (setf remembering t)
+                  (setf state "first-luggage-r"))) ;Switches to remembering
+
+               (when (string-equal "L" choix-model) (progn
+                  (if (= level 1)
                   (progn 
-                     (format t "Niveau 1:~%")
-                     (loop for valise in *valises*
-                        do (when (= (slot-value valise 'couche) 1)
-                           (progn (draw-valise valise) (format t "~%"))))
-                     (format t "~%Niveau 2:~%")
-                     (loop for valise in *valises*
-                        do (when (= (slot-value valise 'couche) 2)
-                           (draw-valise valise)))))))
+                     (setf level 2)
+                     (setf state "third-luggage-2"))
+                  (setf level 1)))) ;Switches the level
+
+               (when (string-equal "6" choix-model) (progn
+                     (setf compteur (+ compteur 1)) ;; incrémente compteur
+                     (if (= level 1)
+                        (progn
+                           (push (slot-value (nth 5 *valises*) 'categorie) couche1)
+                           (setq couche1 (sort couche1 #'<))
+                           (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                        (progn
+                           (push (slot-value (nth 5 *valises*) 'categorie) couche2)
+                           (setq couche2 (sort couche2 #'<))
+                           (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                        ))
+                     (if (member concatenated sets)
+                        (progn 
+                           (setf (slot-value (nth 5 *valises*) 'couche) level))) ; Met la sixième valise sur la couche level
+                     (if (= level 1)
+                     (setf state "switch-level")
+                     (setf state "finish")))
+               )
+
+               (when (string-equal "5" choix-model) (progn
+                     (setf compteur (+ compteur 1)) ;; incrémente compteur
+                     (if (= level 1)
+                        (progn
+                           (push (slot-value (nth 4 *valises*) 'categorie) couche1)
+                           (setq couche1 (sort couche1 #'<))
+                           (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                        (progn
+                           (push (slot-value (nth 4 *valises*) 'categorie) couche2)
+                           (setq couche2 (sort couche2 #'<))
+                           (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                        ))
+                     (if (member concatenated sets)
+                        (progn 
+                           (setf (slot-value (nth 4 *valises*) 'couche) level))) ; Met la cinquième valise sur la couche level
+                     (if (= level 1)
+                     (setf state "sixth-luggage")
+                     (setf state "sixth-luggage-2"))))
+
+               (when (string-equal "4" choix-model) (progn
+                     (setf compteur (+ compteur 1)) ;; incrémente compteur
+                     (if (= level 1)
+                        (progn
+                           (push (slot-value (cadddr *valises*) 'categorie) couche1)
+                           (setq couche1 (sort couche1 #'<))
+                           (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                        (progn
+                           (push (slot-value (cadddr *valises*) 'categorie) couche2)
+                           (setq couche2 (sort couche2 #'<))
+                           (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                        ))
+                     (if (member concatenated sets)
+                        (progn 
+                           (setf (slot-value (cadddr *valises*) 'couche) level))) ; Met la quatrième valise sur la couche level
+                     (if (= level 1)
+                     (setf state "fifth-luggage")
+                     (setf state "fifth-luggage-2"))))
+
+               (when (string-equal "3" choix-model) (progn
+                     (setf compteur (+ compteur 1)) ;; incrémente compteur
+                     (if (= level 1)
+                        (progn
+                           (push (slot-value (caddr *valises*) 'categorie) couche1)
+                           (setq couche1 (sort couche1 #'<))
+                           (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                        (progn
+                           (push (slot-value (caddr *valises*) 'categorie) couche2)
+                           (setq couche2 (sort couche2 #'<))
+                           (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                        ))
+                     (if (member concatenated sets)
+                        (progn 
+                           (setf (slot-value (caddr *valises*) 'couche) level))) ; Met la troisième valise sur la couche level
+                     (if (= level 1) 
+                        (setf state "fourth-luggage")
+                        (setf state "fourth-luggage-2"))))  
+               
+               (when (string-equal "2" choix-model) (progn
+                  (setf compteur (+ compteur 1))
+                  (if (= level 1)
+                     (progn
+                        (push (slot-value (cadr *valises*) 'categorie) couche1)
+                        (setq couche1 (sort couche1 #'<))
+                        (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                     (progn
+                        (push (slot-value (cadr *valises*) 'categorie) couche2)
+                        (setq couche2 (sort couche2 #'<))
+                        (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                     ))
+                  (if (member concatenated sets)
+                     (progn 
+                        (setf (slot-value (cadr *valises*) 'couche) level))) ; Met la deuxième valise sur la couche level
+                  (if (= level 1)
+                     (setf state "third-luggage")
+                     (setf state "third-luggage-2"))))
+
+               (when (string-equal "1" choix-model) (progn
+                  (setf compteur (+ compteur 1))
+                  (if (= level 1)
+                     (progn
+                        (push (slot-value (car *valises*) 'categorie) couche1)
+                        (setq couche1 (sort couche1 #'<))
+                        (setq concatenated (parse-integer (format nil "~{~a~}" couche1))))
+                     (progn
+                        (push (slot-value (car *valises*) 'categorie) couche2)
+                        (setq couche2 (sort couche2 #'<))
+                        (setq concatenated (parse-integer (format nil "~{~a~}" couche2)))
+                     ))
+                  (if (member concatenated sets)
+                     (progn 
+                        (setf (slot-value (car *valises*) 'couche) level))) ; Met la première valise sur la couche level
+                  (if (= level 1)
+                     (setf state "second-luggage")
+                     (setf state "second-luggage-2")))
+               )))
+               (when (string-equal "F" choix-model) (progn
+                  (setf res "win") ;; De base on win
+                  (setf poids-tot-couche-1 0)
+                  (setf poids-tot-couche-2 0)
+                  (loop for valise in *valises* ; boucle sur les valises choisi par le modèle
+                  do (if (= (slot-value valise 'couche) 1)
+                        ;; Si la valise est couche 1
+                        (setf poids-tot-couche-1 (+ poids-tot-couche-1 (slot-value valise 'poids))) ; Adition du poids de la valise
+                        ;; Si la valise est couche 2
+                        (setf poids-tot-couche-2 (+ poids-tot-couche-2 (slot-value valise 'poids))))) ; Adition du poids de la valise
+                  ;(setf choix-model "0")
+                  (if (> poids-tot-couche-2 poids-tot-couche-1)
+                     (setf res "lose") ; Si les valises en couche 2 sont plus lourdes -> lose
+                     (progn (setf not-win nil)
+                     (setf state "final")
+                     (show-model-result res state))))
+               )
+               (when (string-equal "Z" choix-model) (progn
+                  (loop for valise in *valises* ; boucle sur les valises choisi par le modèle et on flip l1 avec l2
+                     do (setf (slot-value valise 'couche) (- 3 (slot-value valise 'couche))))
+                  (setf res "win") ; on les a flip et on win
+                  (progn (setf not-win nil)
+                  (setf state "final")
+                  (show-model-result res state))
+                  )
+               )
+            )
+            (when draw-valises
+            ;; Affichage du message avec les caractéristiques des valises
+            (loop for valise in *valises* do (print-valise valise))
+
+            ;; Affichage du schéma des valises
+            (format t "Niveau 1:~%")
+            (setf nb 0) ; Nombre de petites valises
+            (loop for valise in *valises*
+                  do (when (= (slot-value valise 'couche) 1)
+               (if (not (= (slot-value valise 'categorie) 1))
+                  (progn (draw-valise valise) (format t "~%"))
+                  (setf nb (+ nb 1)))))
+            ; Affichage des petites valises
+            (cond
+               ((>= nb 4) (draw2little)(draw2little))
+               ((= nb 3) (draw2little)(draw1little))				
+               ((= nb 2) (draw2little))
+               ((= nb 1) (draw1little)))
+            (setf nb 0)
+            (format t "~%Niveau 2:~%")
+            (loop for valise in *valises*
+                  do (when (= (slot-value valise 'couche) 2)
+               (if (not (= (slot-value valise 'categorie) 1))
+                  (progn (draw-valise valise) (format t "~%"))
+                  (setf nb (+ nb 1)))))
+            ; Affichage des petites valises
+            (cond
+               ((>= nb 4) (draw2little)(draw2little))
+               ((= nb 3) (draw2little)(draw1little))				
+               ((= nb 2) (draw2little))
+               ((= nb 1) (draw1little)))))
 
    (setf moyenne (+ moyenne compteur)))
-   (/ (/ moyenne n-times) 3.0))
+   (/ (/ moyenne n-times) 2))
 
-(defun show-model-valises(valises &optional res state)
-   (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
-      (mod-focus-fct `(c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie)
-                           p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
-                           result , res
-                           state , state
-                           first-c , nil
-                           second-c, nil))
-      (goal-focus-fct (car (define-chunks-fct ; crée un nouveau chunk et le met dans le goal
-                             `((isa arrange-state c1 ,(slot-value (car valises) 'categorie)  c2 ,(slot-value (cadr valises) 'categorie) c3 ,(slot-value (caddr valises) 'categorie)
-                                 p1 ,(slot-value (car valises) 'poids)  p2 ,(slot-value (cadr valises) 'poids) p3 ,(slot-value (caddr valises) 'poids)
-                                 result , res
-                                 state , state
-                                 first-c , nil
-                                 second-c, nil))))))
-   
-   (run-full-time 10) 
-   *model-action*)
+
+;; Gère 3 à 6 valises, chacune avec les attributs : categorie, poids, et couche.
+;; Les valises manquantes sont représentées par nil pour leurs attributs.
+;; - valises : Liste de 3 à 6 valises.
+;; - res (optionnel) : Résultat associé à l'état.
+;; - state (optionnel) : État actuel.
+;; Modifie ou crée un chunk dans le buffer de but selon la présence d'un chunk existant.
+;; Affiche une erreur si le nombre de valises n'est pas compris entre 3 et 6.
+(defun show-model-valises (valises &optional res state)
+  (let* ((valise-count (length valises))
+         (goal-buffer-exists (buffer-read 'goal))
+         (chunks (mapcar (lambda (n) 
+                           (if (< n valise-count)
+                               (let ((valise (nth n valises)))
+                                 (list (slot-value valise 'categorie)
+                                       (slot-value valise 'poids)
+                                       (slot-value valise 'couche)))
+                             '(0 0 0)))
+                         (list 0 1 2 3 4 5)))
+         (formatted-chunks `(c1 ,(nth 0 (car chunks)) c2 ,(nth 0 (cadr chunks)) c3 ,(nth 0 (caddr chunks)) c4 ,(nth 0 (cadddr chunks)) c5 ,(nth 0 (nth 4 chunks)) c6 ,(nth 0 (nth 5 chunks))
+                            p1 ,(nth 1 (car chunks)) p2 ,(nth 1 (cadr chunks)) p3 ,(nth 1 (caddr chunks)) p4 ,(nth 1 (cadddr chunks)) p5 ,(nth 1 (nth 4 chunks)) p6 ,(nth 1 (nth 5 chunks))
+                            l1 ,(nth 2 (car chunks)) l2 ,(nth 2 (cadr chunks)) l3 ,(nth 2 (caddr chunks)) l4 ,(nth 2 (cadddr chunks)) l5 ,(nth 2 (nth 4 chunks)) l6 ,(nth 2 (nth 5 chunks))
+                            result ,res
+                            state ,state)))
+    (cond
+     ((and goal-buffer-exists (> valise-count 2))
+      (mod-focus-fct formatted-chunks))
+     ((> valise-count 2)
+      (goal-focus-fct (car (define-chunks-fct `(isa arrange-state ,@formatted-chunks)))))
+     (t (format t "Error: valises list length is not between 3 and 6.")))
+    (run-full-time 10)
+    *model-action*))
+
 
 (defun show-model-result(res state)
    (if (buffer-read 'goal) ; s'il y a un chunk dans le buffers goal
@@ -122,7 +316,7 @@
 (defun show-learning (n &optional (graph t))
    (let ((points))
       (dotimes (i n)
-         (push (run-blocks 1 100) points)) ;; ici pour des blocs de 100
+         (push (run-blocks 1 1000) points)) ;; ici pour des blocs de 1000
       (setf points (rev points))
       (when graph
          (draw-graph points))))
@@ -142,20 +336,12 @@
       (add-line-to-exp-window (list 45 (+ 10 (* i 40))) (list 550 (+ 10 (* i 40))) :color 'white :window "Data"))
     
     (let ((x 50))
-      (mapcar (lambda (a b) (add-line-to-exp-window (list x (floor (- 410 (* a 400))))
-                                                  (list (incf x 25) (floor (- 410 (* b 400))))
+      (mapcar (lambda (a b) (add-line-to-exp-window (list x (floor (- 510 (* a 100))))
+                                                    (list (incf x 25) (floor (- 510 (* b 100))))
                                                     :color 'blue :window "Data"))
         (butlast points) (cdr points)))
     (allow-event-manager w)))
 
-
-(defvar *model-action* nil) ; La variable que le model devra remplir (liste de valise)
-
-(defmethod rpm-window-key-event-handler ((win rpm-window) key)
-  (if (eq win (current-device))
-      (setf *model-action* (string key))
-    (unless *human-action*
-      (setf *human-action* (string key)))))
 
 ;;; Classe valise
 (defclass valise()
@@ -188,14 +374,59 @@
    )
 )
 (defun draw2little()
-   (format t "Niveau 1: ~%")
    (format t " ______  ______~%")
    (format t "|______||______|~%")
    (format t "|______||______|~%")
    (format t "|______||______|~%")
 )
 
-(defun create-valises()
+(defun draw1little()
+   (format t " ______ ~%")
+   (format t "|______|~%")
+   (format t "|______|~%")
+   (format t "|______|~%")
+)
+
+;;; Fonction pour obtenir la taille restante du coffre apres avoir placé des valises (valise-list)
+(defun calculate-remaining-space (valise-list)
+  ;; todo: rendre plus générique en fonction de la taille du coffre (tenir compte de la hauteur q4)
+  (let ((total-space 64) ;; 6*6*2 - 2*2*2 pour gerer les dimensions speciales de la petite valise
+        (used-space 0))
+      ;; Boucler sur les valises deja ajoutees et calculer l'espace utilise
+      (loop for valise in valise-list
+            do (setq used-space (+ used-space (* (slot-value valise 'x) (slot-value valise 'y))))
+      )
+      ;; Retourner l'espace restant
+      (- total-space used-space)))
+
+;;; Fonction pour créer des valises additionnelles (selon le nombre genere aleatoirement entre 0 et 3)
+(defun create-additional-valises (valise-list number-additional-valises)
+  (let ((new-valises nil))
+      ;; Boucler sur le nombre de valises additionnelles et en ajouter le maximum possible
+      (loop repeat number-additional-valises
+            do (let ((new-valise (make-instance 'valise)))
+                  ;; Assigner un poids et une catégorie aléatoirement
+                  (setf (slot-value new-valise 'poids) (1+ (act-r-random 2)))
+                  (setf (slot-value new-valise 'categorie) (1+ (act-r-random 3)))
+                  (setf (slot-value new-valise 'couche) 0)
+                  ;; Dimension selon la catégorie
+                  (case (slot-value new-valise 'categorie)
+                  (1 (progn (setf (slot-value new-valise 'x) 3) (setf (slot-value new-valise 'y) 3)))
+                  (2 (progn (setf (slot-value new-valise 'x) 6) (setf (slot-value new-valise 'y) 2)))
+                  (3 (progn (setf (slot-value new-valise 'x) 6) (setf (slot-value new-valise 'y) 3)))
+                  )
+                  ;; Valider si la valise peut être ajoutée sinon on l'ignore
+                  (when (>= (calculate-remaining-space (append valise-list new-valises))
+                           (* (slot-value new-valise 'x) (slot-value new-valise 'y)))
+                  (push new-valise new-valises))
+               )
+         )
+    (append valise-list new-valises)
+   )
+)
+
+;; Fonction pour creer les valises, on cree 3 valises de base et on ajoute des valises additionnelles (selon le nombre genere aleatoirement entre 0 et 3)
+(defun create-valises(count-to-add)
    ;; Création de l'instance des valises
    (defparameter *valise-1* (make-instance 'valise))
    (defparameter *valise-2* (make-instance 'valise))
@@ -205,16 +436,25 @@
 
    (loop for valise in valise-list ; boucle sur les valises
       do (progn
-            (setf (slot-value valise 'poids) (1+ (act-r-random 5))) ; poids aléatoire
-            (setf (slot-value valise 'categorie) (1+ (act-r-random 3))) ; categorie aléatoire
-            (setf (slot-value valise 'couche) 1) ; couche
+            (setf (slot-value valise 'poids) (+ 3 (act-r-random 2))) ;; poids aléatoire
+            (setf (slot-value valise 'categorie) (1+ (act-r-random 3))) ;; categorie aléatoire
+            (setf (slot-value valise 'couche) 0) ;; couche
             ;; Dimension selon la catégorie
             (case (slot-value valise 'categorie)
                (1 (progn (setf (slot-value valise 'x) 3) (setf (slot-value valise 'y) 3)))
                (2 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 2)))
-               (3 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 3))))))
-   valise-list); return valise-list
-   
+               (3 (progn (setf (slot-value valise 'x) 6) (setf (slot-value valise 'y) 3)))
+            )
+         )
+   )
+
+   ;; Ajout les valises additionnelles
+   (setf v (create-additional-valises valise-list count-to-add))
+
+   (setf sorted-v (sort v #'(lambda (v1 v2) (> (slot-value v1 'poids) (slot-value v2 'poids)))))
+   sorted-v); return valise-list
+
+
 
 
 ;;; Modèle ACT-R : 
@@ -226,84 +466,213 @@
 
 (install-device (open-exp-window "" :visible nil))
 
-(chunk-type arrange-state c1 c2 c3 p1 p2 p3 first-c second-c result state)
-(chunk-type first1 v1 v2 v3 result-first1)
-(chunk-type first2 v4 v5 result-first2)
+(chunk-type arrange-state c1 c2 c3 c4 c5 c6 p1 p2 p3 p4 p5 p6 l1 l2 l3 l4 l5 l6 r1 r2 r3 r4 r5 r6 result state)
 
-(chunk-type learned-info c1 c2 c3 p1 p2 p3 first-c second-c result)
+(chunk-type learned-info c1 c2 c3 c4 c5 c6 p1 p2 p3 p4 p5 p6 l1 l2 l3 l4 l5 l6)
 (declare-buffer-usage goal arrange-state :all)
 
-(define-chunks 
-
+(define-chunks
     (begin-model isa chunk)
+	(second-luggage isa chunk)
+	(third-luggage isa chunk)
+	(fourth-luggage isa chunk)
+	(fifth-luggage isa chunk)
+	(sixth-luggage isa chunk)
+	(switch-level isa chunk)
+	(third-luggage-2 isa chunk)
+	(fourth-luggage-2 isa chunk)
+	(fifth-luggage-2 isa chunk)
+	(sixth-luggage-2 isa chunk)	
     (remembering isa chunk) 
-    (finish isa chunk) 
-    (retrieving isa chunk) 
-    (retrieving_2layers isa chunk) 
-    (retrieving_2layers_2 isa chunk)
-    (retrieving_2layers_3 isa chunk) 
-    (comparing_weight isa chunk) 
-    (comparing2 isa chunk)    
-
+    (finish isa chunk)
 )
 
-
-(add-dm
-   (a ISA first1 v1 3 v2 1 v3 1 result-first1 113 )
-   (b ISA first1 v1 2 v2 2 v3 2 result-first1 222 )
-   (c ISA first1 v1 1 v2 1 v3 1 result-first1 111 )
-   (d ISA first1 v1 1 v2 3 v3 1 result-first1 113 )
-   (e ISA first1 v1 1 v2 1 v3 3 result-first1 113 )
-   (f ISA first1 v1 1 v2 1 v3 2 result-first1 112 )
-   (g ISA first2 v4 3 v5 3 result-first2 33)
-   (h ISA first2 v4 3 v5 2 result-first2 23)
-   (j ISA first2 v4 2 v5 3  result-first2 23)
-   (k ISA first2 v4 3  v5 1 result-first2 13)
-   (l ISA first2 v4 1  v5 3 result-first2 13)
-   (m ISA first2 v4 2 v5 1  result-first2 12)
-   (n ISA first2 v4 1 v5 2  result-first2 12)
-   (o ISA first2 v4 2 v5 2 result-first2 22)
-   (p ISA first2 v4 1 v5  1 result-first2 11)
-)
+;; Définition des procédures
 (p start
    =goal>
         isa arrange-state
         state nil
-        c1 =a
+        c1  =a
         c2  =b
         c3  =c
-        p1  =j
-        p2  =d
-        p3  =e
+        c4  =d
+        c5  =e
+        c6  =f
+        p1  =g
+        p2  =h
+        p3  =i
+        p4  =j
+        p5  =k
+        p6  =l
    ==>
    +retrieval> 
         isa learned-info
-        c1 =a
+        c1  =a
         c2  =b
         c3  =c
-        p1  =j
-        p2  =d
-        p3  =e
-      - first-c nil
-      - second-c nil    
+        c4  =d
+        c5  =e
+        c6  =f
+        p1  =g
+        p2  =h
+        p3  =i
+        p4  =j
+        p5  =k
+        p6  =l
    =goal>
         state remembering
 )
+
 (p remember-organization
     =goal>
        isa arrange-state
        state remembering
     =retrieval>
        isa learned-info
-       first-c =val1
-       second-c =val2
+        l1  =val1
+        l2  =val2
+        l3  =val3
+        l4  =val4
+        l5  =val5
+        l6  =val6
+   ?manual>
+      state free
     ==>
     =goal>
-       state finish
-       first-c =val1
-       second-c =val2
-       result "win"
+       isa arrange-state
+        r1  =val1
+        r2  =val2
+        r3  =val3
+        r4  =val4
+        r5  =val5
+        r6  =val6
+        state verifying     
+   +manual>
+      cmd press-key
+      key "R"
 )
+
+(p first-luggage-r
+   =goal>
+      state "first-luggage-r"
+      r1 =l
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p second-luggage-r
+   =goal>
+      state "second-luggage-r"
+      r2 =l
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p third-luggage-r
+   =goal>
+      state "third-luggage-r"
+      r3 =l
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p fourth-luggage-r
+   =goal>
+      state "fourth-luggage-r"
+      r4 =l
+   -  r4 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p no-fourth-luggage-r
+   =goal>
+      state "fourth-luggage-r"
+      r4 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state "finish"
+)
+
+(p fifth-luggage-r
+   =goal>
+      state "fifth-luggage-r"
+      r5 =l
+   -  r5 0
+
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p no-fifth-luggage-r
+   =goal>
+      state "fifth-luggage-r"
+      r5 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state "finish"
+)
+
+(p sixth-luggage-r
+   =goal>
+      state "sixth-luggage-r"
+      r6 =l
+   -  r6 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key =l
+)
+
+(p no-sixth-luggage-r
+   =goal>
+      state "sixth-luggage-r"
+      r6 0
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state "finish"
+)
+
 (p doesnt-remember-organization
     =goal>
        isa arrange-state
@@ -314,165 +683,300 @@
      =goal>
         state begin-model
 )
-(p begin
+(p first-luggage
    =goal>
-      c1 =a
-      c2 =b
-      c3 =c
       state begin-model
-   ==>
-   +retrieval> 
-      isa first1
-      v1 =a
-      v2 =b
-      v3 =c
-   =goal>
-      state retrieving
-)
-(p success_3bags
-   =retrieval>
-      result-first1  =value 
-   =goal> 
-      state retrieving
-   ==>
-   =goal>
-      first-c   =value
-      second-c "vide"
-      state "final"
-      result "win"        
-)
-(p fail-3bags-1     
-   ?retrieval>
-      buffer  failure
-   =goal>
-      isa arrange-state 
-      state retrieving
-      c1  =a
-      c2  =b
-   ==>
-   +retrieval>
-      v4   =a
-      v5   =b
-   =goal>
-      state retrieving_2layers
-)
-(p car-trunk
-	=retrieval>
-      result-first2 =p
-   =goal>
-      isa arrange-state
-      state retrieving_2layers
-      c3    =q
-	?manual>
-      state free
-   ==>
-   =goal>
-      first-c   =p
-      second-c  =q
-      state comparing_weight
-   +manual>
-      cmd press-key
-      key "1"
-)
-(p fail-3bag-2
-   =goal>
-      result "lose"
-      state "weight-problem"
-      c2  =a
-      c3  =b
-   ==>
-   +retrieval>
-      v4   =a
-      v5   =b
-   =goal>
-      state retrieving_2Layers_2    
-)
-(p car-trunk-2
-   =retrieval>
-      result-first2 =val
-   =goal>
-      state retrieving_2Layers_2  
-      c1 =v 
    ?manual>
       state free
    ==>
    =goal>
-      first-c =val  
-      second-c =v
-      state comparing2
+      state verifying
+   +manual>
+      cmd press-key
+      key "1"
+)
+(p second-luggage
+   =goal>
+      state "second-luggage"
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
    +manual>
       cmd press-key
       key "2"
 )
-(p fail-3bag-3
-   ?retrieval>
-      buffer  failure
+(p third-luggage
    =goal>
-      isa arrange-state 
-      state "weight-problem-2"
-      c1  =a
-      c3  =b
+      state "third-luggage"
+   ?manual>
+      state free
    ==>
-   +retrieval>
-      v4   =a
-      v5   =b
    =goal>
-      state retrieving_2layers_3   
+      state verifying
+   +manual>
+      cmd press-key
+      key "3"
 )
-(p car-trunk-3
-   =retrieval>
-      result-first2 =val
+(p fourth-luggage
    =goal>
-      state retrieving_2layers_3
-      c2 =v 
+      state "fourth-luggage"
+	- c4 0
+   ?manual>
+      state free
    ==>
    =goal>
-      first-c =val  
-      second-c =v
-      state "final"
-      result "win"
+      state verifying
+   +manual>
+      cmd press-key
+      key "4"
+)
+(p no-fourth-luggage
+   =goal>
+      state "fourth-luggage"
+	  c4 0 
+   ==>
+   =goal>
+      state "switch-level"
+)
+(p fifth-luggage
+   =goal>
+      state "fifth-luggage"
+	  - c5 0
+   ?manual>
+      state free	  
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key "5"
+)
+(p no-fifth-luggage
+   =goal>
+      state "fifth-luggage"
+	  c5 0
+   ==>
+   =goal>
+      state "switch-level"
+)
+(p sixth-luggage
+   =goal>
+      state "sixth-luggage"
+	  - c6 0 
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key "6"
+)
+(p no-sixth-luggage
+   =goal>
+      state "sixth-luggage"
+	  c6 0 
+   ==>
+   =goal>
+      state "switch-level"
+)
+(p switch-level
+   =goal>
+      state "switch-level"
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key "L"
+)
+(p third-luggage-2
+   =goal>
+      state "third-luggage-2"
+	- l3 1
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key "3"
+)
+(p skip-third-luggage-2
+   =goal>
+      state "third-luggage-2"
+	  l3 1
+   ==>
+   =goal>
+      state "fourth-luggage-2"
+)
+(p fourth-luggage-2
+   =goal>
+      state "fourth-luggage-2"
+	- c4 0
+	- l4 1
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key "4"
+)
+(p skip-fourth-luggage-2
+   =goal>
+      state "fourth-luggage-2"
+	  l4 1
+   ==>
+   =goal>
+      state "fifth-luggage-2"
+)
+(p no-fourth-luggage-2
+   =goal>
+      state "fourth-luggage-2"
+	  c4 0 
+   ==>
+   =goal>
+      state "finish"
+)
+(p fifth-luggage-2
+   =goal>
+      state "fifth-luggage-2"
+	- c5 0 
+	- l5 1
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key "5"
+)
+(p skip-fifth-luggage-2
+   =goal>
+      state "fifth-luggage-2"
+	  l5 1
+   ==>
+   =goal>
+      state "sixth-luggage-2"
+)
+(p no-fifth-luggage-2
+   =goal>
+      state "fifth-luggage-2"
+	  c5 0 
+   ==>
+   =goal>
+      state "finish"
+)
+(p sixth-luggage-2
+   =goal>
+      state "sixth-luggage-2"
+	- c6 0 
+	- l6 1
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state finish
+   +manual>
+      cmd press-key
+      key "6"
+)
+(p skip-sixth-luggage-2
+   =goal>
+      state "sixth-luggage-2"
+	  l6 1
+   ==>
+   =goal>
+      state "finish"
+)
+(p no-sixth-luggage-2
+   =goal>
+      state "sixth-luggage-2"
+	  c6 0 
+   ==>
+   =goal>
+      state "finish"
+)
+(p verify
+   =goal>
+      state "finish"
+    - result "win"
+   ?manual>
+      state free
+   ==>
+   =goal>
+      state verifying
+   +manual>
+      cmd press-key
+      key "F"
 )
 (p memorize
     =goal>
         state "final"
         result "win"
-        c1 =a
-        c2 =b
-        c3 =c
-        p1 =l
-        p2 =d
-        p3 =e
-        first-c =f
-        second-c =g 
+        c1  =a
+        c2  =b
+        c3  =c
+        c4  =d
+        c5  =e
+        c6  =f
+        p1  =g
+        p2  =h
+        p3  =i
+        p4  =j
+        p5  =k
+        p6  =l
+        l1  =m
+        l2  =n
+        l3  =o
+        l4  =p
+        l5  =q
+        l6  =r
     ?imaginal>
         state free    
     ==>
     =goal>
         state finish
     +imaginal>
-        c1 =a
-        c2 =b
-        c3 =c
-        p1 =l
-        p2 =d
-        p3 =e
-        first-c =f
-        second-c  =g
+        c1  =a
+        c2  =b
+        c3  =c
+        c4  =d
+        c5  =e
+        c6  =f
+        p1  =g
+        p2  =h
+        p3  =i
+        p4  =j
+        p5  =k
+        p6  =l
+        l1  =m
+        l2  =n
+        l3  =o
+        l4  =p
+        l5  =q
+        l6  =r
 )
 (p show-organization
    =goal>
       state finish
       result "win"
-      first-c =org1
-      second-c =org2
    ?manual>
       state free
     ==>
+    =goal>
+        state "end"
    +manual>
       cmd press-key
       key "0"
-   !output! =org1
-   !output! =org2
 )
 (p clear-new-imaginal-chunk
     ?imaginal>
@@ -481,5 +985,17 @@
     ==>
     -imaginal>
 )
-
+(p show-organization-lose
+   =goal>
+      state verifying
+      result "lose"
+   ?manual>
+      state free
+    ==>
+    =goal>
+        state "end"
+   +manual>
+      cmd press-key
+      key "Z"
+)
 )
